@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+
 import { editableCardMotion } from '../../animation/AnimationVariants';
 import PlayerEditableCard from '../PlayerCard/PlayerEditableCard';
 import { resolveImage } from '../../helpers/imageHelper';

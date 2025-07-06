@@ -1,11 +1,6 @@
-import { Form, Formik } from 'formik';
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { getRandomImageName, resolveImage } from '../../helpers/imageHelper';
-import { editableCardMotion, playerCardVariants, playerCardsContainerVariants} from '../../animation/AnimationVariants';
+import { getRandomImageName} from '../../helpers/imageHelper';
 
-import PlayerCard from '../PlayerCard/PlayerCard';
-import PlayerEditableCard from '../PlayerCard/PlayerEditableCard';
 import RegistrationForm from './RegistrationForm';
 import '../PlayerRegistration/PlayerRegistration.css';
 

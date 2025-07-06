@@ -1,8 +1,8 @@
 import { motion } from "framer-motion"
 
 import { playerCardVariants, playerCardsContainerVariants } from '../../animation/AnimationVariants';
-import PlayerCard from "../PlayerCard/PlayerCard";
 import { resolveImage } from "../../helpers/imageHelper";
+import PlayerCard from "../PlayerCard/PlayerCard";
 
 export default function PlayerCardDisplay({avatar, player1Name}) {
   return (
