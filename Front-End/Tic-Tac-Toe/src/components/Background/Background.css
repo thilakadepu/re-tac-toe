@@ -1,0 +1,39 @@
+* {
+  margin: 0;
+  font-family: 'Fredoka', sans-serif;
+}
+
+section.tic-tac-toe-bg {
+  background-color: #5A1E76;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; 
+  align-items: flex-start;
+}
+
+section.tic-tac-toe-bg > span {
+  font-size: 10rem;
+  font-weight: 600;
+  margin: -3rem 0;
+  user-select: none;
+  position: relative;
+  left: -16px;
+}
+
+section.tic-tac-toe-bg span:nth-child(1) {
+  color: #DCBF3F;
+}
+
+section.tic-tac-toe-bg span:nth-child(2) {
+  color: #72CFF9;
+}
+
+section.tic-tac-toe-bg span:nth-child(3) {
+  color: #DCBF3F;
+}

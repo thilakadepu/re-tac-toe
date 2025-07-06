@@ -1,0 +1,53 @@
+main {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.registration-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+  background-color: rgba(255, 255, 255, 0.05); 
+  border-radius: 1rem;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.play-btn {
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 20px;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  background-color: #FEF247;
+  color: #2C003E;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 0 #d1c100, 0 4px 10px rgba(0, 0, 0, 0.2);
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.play-btn:hover {
+  background-color: #fff85c;
+  box-shadow: 0 2px 0 #d1c100, 0 6px 12px rgba(0, 0, 0, 0.25);
+  transform: translateY(-2px);
+}
+
+.play-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 #a89e00;
+}
+
+.player-cards {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  align-items: center;
+}
