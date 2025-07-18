@@ -7,6 +7,7 @@ import com.game.re_tac_toe.entity.User;
 import com.game.re_tac_toe.security.JwtAuthenticationFilter;
 import com.game.re_tac_toe.service.AuthenticationService;
 import com.game.re_tac_toe.service.UserService;
+import org.apache.coyote.Response;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -33,6 +34,9 @@ public class AuthController {
 
     @PostMapping("register")
     public ResponseEntity<?> register(@RequestBody UserDto userDto) {
+        if (userService.isUserPresent(userDto.getUsername())) {
+            return ResponseEntity.badRequest().body("Username already exists");
+        }
         User user = new User(userDto.getUsername(), userDto.getPassword());
         userService.saveUser(user);
         return ResponseEntity.ok("User registered successfully");

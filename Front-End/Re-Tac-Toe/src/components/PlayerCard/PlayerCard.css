@@ -4,7 +4,7 @@ article {
   border-radius: 0.75rem;
   width: 200px;
   text-align: center;
-  color: white;
+  /* color: white; */
   transition: transform 0.2s ease;
 }
 
@@ -22,4 +22,14 @@ article img {
 
 article p {
   font-size: 20px;
+}
+
+.error-player-name {
+  font-size: 1rem;
+  /* color: #f39c12; */
+  color: cyan;
+}
+
+.error-div {
+  height: 10px;
 }
