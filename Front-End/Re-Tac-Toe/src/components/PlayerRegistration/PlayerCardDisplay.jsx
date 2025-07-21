@@ -3,8 +3,26 @@ import { motion } from "framer-motion"
 import { playerCardVariants, playerCardsContainerVariants } from '../../animation/AnimationVariants';
 import { resolveImage } from "../../helpers/imageHelper";
 import PlayerCard from "../PlayerCard/PlayerCard";
+import { useEffect } from "react";
+import { connect, disconnect } from "../../services/connection";
+import { getToken } from "../../services/authToken";
 
 export default function PlayerCardDisplay({avatar, player1Name}) {
+
+  useEffect(() => {
+    const token = getToken();
+
+    if (token) {
+      connect(token);
+    } else {
+      console.error("Could not get token. User might not be logged in.");
+    }
+
+    return () => {
+      disconnect()
+    }
+  }, [])
+
   return (
     <motion.div
       key="cards"

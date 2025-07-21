@@ -27,11 +27,6 @@ public class AuthController {
         this.authenticationService = authenticationService;
     }
 
-    @Bean
-    public final JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(authenticationService);
-    }
-
     @PostMapping("register")
     public ResponseEntity<?> register(@RequestBody UserDto userDto) {
         if (userService.isUserPresent(userDto.getUsername())) {

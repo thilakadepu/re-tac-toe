@@ -19,6 +19,8 @@ export default function PlayerRegistration() {
     setAvatar(getRandomImageName());
   }, [])
 
+  // On isSubmitted true
+
   const handleSubmit = (values) => {
     const payload = {
       username: values.name,
@@ -27,11 +29,9 @@ export default function PlayerRegistration() {
 
     registerUser(payload)
       .then(() => {
-        // console.log('Registration Successful');
         return loginUser(payload);
       })
       .then((loginResponse) => {
-        // console.log('Login Successful, JWT:', loginResponse.data.token);
         const token = loginResponse.data.token;
         saveToken(token);
         login(payload.username, "Player")
@@ -39,6 +39,8 @@ export default function PlayerRegistration() {
         setIsSubmitted(true);
       })
       .catch((error) => {
+        // Here if it is error it is setting the user to duplicate 
+        // If backend is not connected also
         console.error('Registration or Login unsuccessful', error);
         setIsDuplicateUserName(true)
       });

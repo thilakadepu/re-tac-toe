@@ -1,6 +1,7 @@
 package com.game.re_tac_toe.config;
 
 import com.game.re_tac_toe.security.JwtAuthenticationFilter;
+import com.game.re_tac_toe.service.AuthenticationService;
 import com.game.re_tac_toe.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +32,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter(AuthenticationService authenticationService) {
+        return new JwtAuthenticationFilter(authenticationService);
+    }
+
+    @Bean
     public AuthenticationProvider authenticationProvider () {
         DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider(userService);
         daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
@@ -42,6 +48,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                     .requestMatchers(HttpMethod.POST, "/api/register", "/api/login").permitAll()
+                    .requestMatchers("/ws/**").permitAll()
                     .anyRequest().authenticated()
                 )
                 .cors(cors -> {})
