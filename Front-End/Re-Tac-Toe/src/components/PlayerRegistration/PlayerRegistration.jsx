@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 
 import { getRandomImageName} from '../../helpers/imageHelper';
 import RegistrationForm from './RegistrationForm';
 import '../PlayerRegistration/PlayerRegistration.css';
 import { loginUser, registerUser } from '../../services/api.js';
 import { saveToken } from '../../services/authToken.js';
+import { AuthContext } from '../../context/AuthContext.jsx';
 
 export default function PlayerRegistration() {
 
+  const { login } = useContext(AuthContext)
   const [avatar, setAvatar] = useState(null)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [player1Name, setPlayer1Name] = useState(null)
@@ -32,6 +34,7 @@ export default function PlayerRegistration() {
         // console.log('Login Successful, JWT:', loginResponse.data.token);
         const token = loginResponse.data.token;
         saveToken(token);
+        login(payload.username, "Player")
         setPlayer1Name(values.name);
         setIsSubmitted(true);
       })
