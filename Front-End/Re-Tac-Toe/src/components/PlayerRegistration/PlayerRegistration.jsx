@@ -10,16 +10,9 @@ import { AuthContext } from '../../context/AuthContext.jsx';
 export default function PlayerRegistration() {
 
   const { login } = useContext(AuthContext)
-  const [avatar, setAvatar] = useState(null)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [player1Name, setPlayer1Name] = useState(null)
   const [isDuplicateUserName, setIsDuplicateUserName] = useState(false)
-
-  useEffect(() => {
-    setAvatar(getRandomImageName());
-  }, [])
-
-  // On isSubmitted true
 
   const handleSubmit = (values) => {
     const payload = {
@@ -49,7 +42,6 @@ export default function PlayerRegistration() {
   return (
     <main>
       <RegistrationForm
-        avatar={avatar}
         isDuplicateUserName = {isDuplicateUserName}
         isSubmitted={isSubmitted}
         player1Name={player1Name}

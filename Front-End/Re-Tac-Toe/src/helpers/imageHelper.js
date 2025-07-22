@@ -15,10 +15,21 @@ const imageMap = {
 const imageNames = Object.keys(imageMap)
 
 export function getRandomImageName() {
-  const randomIdx = Math.floor(Math.random() * imageNames.length);
-  return imageNames[randomIdx];
+  const randomIdx = Math.floor(Math.random() * imageNames.length)
+  return imageNames[randomIdx]
+}
+
+export function startImageGenerator(callback, interval = 999) {
+  callback(getRandomImageName())
+  
+  const intervalId = setInterval(() => {
+    const newImageName = getRandomImageName()
+    callback(newImageName)
+  }, interval)
+
+  return () => clearInterval(intervalId)
 }
 
 export function resolveImage(name) {
-  return imageMap[name] || pikachu; 
+  return imageMap[name] || pikachu
 }

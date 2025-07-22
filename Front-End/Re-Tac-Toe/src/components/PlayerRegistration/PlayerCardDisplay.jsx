@@ -1,27 +1,55 @@
 import { motion } from "framer-motion"
 
 import { playerCardVariants, playerCardsContainerVariants } from '../../animation/AnimationVariants';
-import { resolveImage } from "../../helpers/imageHelper";
+import { resolveImage, getRandomImageName} from "../../helpers/imageHelper";
 import PlayerCard from "../PlayerCard/PlayerCard";
-import { useEffect } from "react";
-import { connect, disconnect } from "../../services/connection";
+import { useEffect, useState } from "react";
+import { connect, disconnect, subscribeToGameStart, joinGame} from "../../services/connection";
 import { getToken } from "../../services/authToken";
 
-export default function PlayerCardDisplay({avatar, player1Name}) {
+export default function PlayerCardDisplay({avatar, player1Name, setIsConnected}) {
+  const [player2Avatar, setPlayer2Avatar] = useState(getRandomImageName())
+  const [player2Name, setPlayer2Name] = useState('')
 
   useEffect(() => {
     const token = getToken();
-
-    if (token) {
-      connect(token);
-    } else {
-      console.error("Could not get token. User might not be logged in.");
+    if (!token) {
+      console.error("Could not get token");
+      return; 
     }
+
+    const handleOpponentFound = (name) => {
+      setPlayer2Name(name);
+      setIsConnected(true)
+    };
+    
+    const handleOpponentAvatarFound = (avatarFound) => {
+      setPlayer2Avatar(avatarFound.trim())
+    }
+
+    const afterConnected = () => {
+      subscribeToGameStart(handleOpponentFound, handleOpponentAvatarFound);
+      joinGame(avatar)
+    };
+    
+    connect(token, afterConnected);
 
     return () => {
-      disconnect()
+      disconnect();
+      setIsConnected(false)
+    };
+  }, [avatar, player1Name, setIsConnected]);
+
+  useEffect(() => {
+    if (player2Name === '') {
+      const intervalId = setInterval(() => {
+        setPlayer2Avatar(getRandomImageName());
+      }, 999);
+
+      return () => clearInterval(intervalId)
     }
-  }, [])
+
+  }, [player2Name])
 
   return (
     <motion.div
@@ -48,9 +76,9 @@ export default function PlayerCardDisplay({avatar, player1Name}) {
         transition={{ duration: 0.5, ease: 'easeOut' }}
       >
         <PlayerCard
-          src={resolveImage(avatar)}
+          src={resolveImage(player2Avatar)}
           alt="Player 2"
-          name="Player 2"
+          name={player2Name === '' ? 'Searching ..' : player2Name}
         />
       </motion.div>
     </motion.div>

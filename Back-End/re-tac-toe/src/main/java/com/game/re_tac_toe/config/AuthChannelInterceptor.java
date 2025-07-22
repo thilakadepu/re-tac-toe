@@ -1,5 +1,9 @@
 package com.game.re_tac_toe.config;
 
+import com.game.re_tac_toe.entity.Player;
+import com.game.re_tac_toe.entity.PlayerStatus;
+import com.game.re_tac_toe.entity.User;
+import com.game.re_tac_toe.repositories.PlayerRepository;
 import com.game.re_tac_toe.service.AuthenticationService;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -12,13 +16,17 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
 public class AuthChannelInterceptor implements ChannelInterceptor {
 
     private final AuthenticationService authenticationService;
+    private final PlayerRepository playerRepository;
 
-    public AuthChannelInterceptor(AuthenticationService authenticationService) {
+    public AuthChannelInterceptor(AuthenticationService authenticationService, PlayerRepository playerRepository) {
         this.authenticationService = authenticationService;
+        this.playerRepository = playerRepository;
     }
 
     @Override
@@ -26,34 +34,45 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor =
                 MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
-        System.out.println("AuthChannelInterceptor processing command: " + accessor.getCommand());
-
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-            System.out.println("AuthChannelInterceptor processing command: " + accessor.getCommand());
-
             String authorizationHeader = accessor.getFirstNativeHeader("Authorization");
-            System.out.println("Authorization Header: " + authorizationHeader);
 
             if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
                 String jwt = authorizationHeader.substring(7);
-                System.out.println("Extracted JWT: " + jwt);
 
                 try {
                     UserDetails userDetails = authenticationService.validateToken(jwt);
-                    System.out.println("Token validated for user: " + userDetails.getUsername());
+
+                    if (userDetails instanceof User) {
+                        User user = (User) userDetails;
+
+                        Player player = playerRepository.findByUser_Username(user.getUsername())
+                                .orElseGet(() -> {
+                                    return new Player("Pikachu.png", user);
+                                });
+
+                        player.setStatus(PlayerStatus.WAITING);
+                        playerRepository.save(player);
+                        System.out.println("Player " + user.getUsername() + " is now WAITING.");
+                    }
 
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
 
-
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     accessor.setUser(authentication);
-                    System.out.println("User set in SecurityContext and WebSocket session.");
                 } catch (Exception e) {
                     System.err.println("!!! Token validation failed: " + e.getMessage());
                 }
-            } else {
-                System.err.println("!!! No 'Authorization: Bearer <token>' header found in STOMP CONNECT frame.");
+            } else if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
+                if (accessor.getUser() != null) {
+                    String username = accessor.getUser().getName();
+                    Optional<Player> playerOpt = playerRepository.findByUser_Username(username);
+                    playerOpt.ifPresent(player -> {
+                        player.setStatus(PlayerStatus.OFFLINE);
+                        playerRepository.save(player);
+                    });
+                }
             }
         }
         return message;
