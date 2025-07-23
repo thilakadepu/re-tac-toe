@@ -32,8 +32,7 @@ public class AuthController {
         if (userService.isUserPresent(userDto.getUsername())) {
             return ResponseEntity.badRequest().body("Username already exists");
         }
-        User user = new User(userDto.getUsername(), userDto.getPassword());
-        userService.saveUser(user);
+        userService.saveUser(userDto);
         return ResponseEntity.ok("User registered successfully");
     }
 

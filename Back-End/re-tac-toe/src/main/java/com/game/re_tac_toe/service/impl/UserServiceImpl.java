@@ -1,6 +1,8 @@
 package com.game.re_tac_toe.service.impl;
 
+import com.game.re_tac_toe.dto.UserDto;
 import com.game.re_tac_toe.entity.User;
+import com.game.re_tac_toe.mapper.UserMapper;
 import com.game.re_tac_toe.repository.UserRepository;
 import com.game.re_tac_toe.service.UserService;
 import org.springframework.context.annotation.Lazy;
@@ -14,14 +16,17 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
-    public UserServiceImpl(UserRepository userRepository, @Lazy PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, @Lazy PasswordEncoder passwordEncoder, UserMapper userMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userMapper = userMapper;
     }
 
     @Override
-    public void saveUser(User user) {
+    public void saveUser(UserDto userDto) {
+        User user = userMapper.toEntity(userDto);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
     }
