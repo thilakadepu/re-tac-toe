@@ -1,6 +1,5 @@
-package com.game.re_tac_toe.config;
+package com.game.re_tac_toe.security;
 
-import com.game.re_tac_toe.security.JwtAuthenticationFilter;
 import com.game.re_tac_toe.service.AuthenticationService;
 import com.game.re_tac_toe.service.UserService;
 import org.springframework.context.annotation.Bean;

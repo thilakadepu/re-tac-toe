@@ -3,7 +3,7 @@
   font-family: 'Fredoka', sans-serif;
 }
 
-section.tic-tac-toe-bg {
+section.re-tac-toe-bg {
   background-color: #5A1E76;
   position: fixed;
   top: 0;
@@ -15,9 +15,11 @@ section.tic-tac-toe-bg {
   flex-direction: column;
   justify-content: flex-end; 
   align-items: flex-start;
+  padding-bottom: 2rem;
+  box-sizing: border-box;
 }
 
-section.tic-tac-toe-bg > span {
+section.re-tac-toe-bg > span {
   font-size: 10rem;
   font-weight: 600;
   margin: -3rem 0;
@@ -26,14 +28,15 @@ section.tic-tac-toe-bg > span {
   left: -16px;
 }
 
-section.tic-tac-toe-bg span:nth-child(1) {
+section.re-tac-toe-bg span:nth-child(1) {
   color: #DCBF3F;
+  padding-left: 0.5rem;
 }
 
-section.tic-tac-toe-bg span:nth-child(2) {
+section.re-tac-toe-bg span:nth-child(2) {
   color: #72CFF9;
 }
 
-section.tic-tac-toe-bg span:nth-child(3) {
+section.re-tac-toe-bg span:nth-child(3) {
   color: #DCBF3F;
 }

@@ -1,9 +1,9 @@
-package com.game.re_tac_toe.config;
+package com.game.re_tac_toe.security;
 
 import com.game.re_tac_toe.entity.Player;
-import com.game.re_tac_toe.entity.PlayerStatus;
+import com.game.re_tac_toe.entity.enums.PlayerStatus;
 import com.game.re_tac_toe.entity.User;
-import com.game.re_tac_toe.repositories.PlayerRepository;
+import com.game.re_tac_toe.repository.PlayerRepository;
 import com.game.re_tac_toe.service.AuthenticationService;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;

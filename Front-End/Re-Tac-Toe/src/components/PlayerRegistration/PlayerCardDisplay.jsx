@@ -6,10 +6,14 @@ import PlayerCard from "../PlayerCard/PlayerCard";
 import { useEffect, useState } from "react";
 import { connect, disconnect, subscribeToGameStart, joinGame} from "../../services/connection";
 import { getToken } from "../../services/authToken";
+import { useNavigate } from "react-router-dom";
 
 export default function PlayerCardDisplay({avatar, player1Name, setIsConnected}) {
   const [player2Avatar, setPlayer2Avatar] = useState(getRandomImageName())
   const [player2Name, setPlayer2Name] = useState('')
+
+  const [roomId, setRoomId] = useState(null);
+  const navigate = useNavigate()
 
   useEffect(() => {
     const token = getToken();
@@ -19,7 +23,7 @@ export default function PlayerCardDisplay({avatar, player1Name, setIsConnected})
     }
 
     const handleOpponentFound = (name) => {
-      setPlayer2Name(name);
+      setPlayer2Name(name)
       setIsConnected(true)
     };
     
@@ -27,8 +31,12 @@ export default function PlayerCardDisplay({avatar, player1Name, setIsConnected})
       setPlayer2Avatar(avatarFound.trim())
     }
 
+    const handleIdFound = (id) => {
+      setRoomId(id);
+    };
+
     const afterConnected = () => {
-      subscribeToGameStart(handleOpponentFound, handleOpponentAvatarFound);
+      subscribeToGameStart(handleOpponentFound, handleOpponentAvatarFound, handleIdFound);
       joinGame(avatar)
     };
     
@@ -39,6 +47,14 @@ export default function PlayerCardDisplay({avatar, player1Name, setIsConnected})
       setIsConnected(false)
     };
   }, [avatar, player1Name, setIsConnected]);
+
+  useEffect(() => {
+    if (player2Name && roomId) {
+      setTimeout(() => {
+        navigate(`/room/${roomId}`);
+      }, 1000); 
+    }
+  }, [player2Name, roomId, navigate]);
 
   useEffect(() => {
     if (player2Name === '') {

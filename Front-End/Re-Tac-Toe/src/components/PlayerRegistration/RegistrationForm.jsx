@@ -26,7 +26,6 @@ export default function RegistrationForm({ isDuplicateUserName, isSubmitted, pla
         </AnimatePresence>
         <button type='submit' className="play-btn">
           {!isConnected ? (!isSubmitted ? "Play" : "Connecting ...") : "Connected"}
-          {/* {!isSubmitted ? "Play" : "Connecting ..."} */}
         </button>
       </Form>
     </Formik> 

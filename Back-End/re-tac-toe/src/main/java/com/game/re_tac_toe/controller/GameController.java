@@ -1,7 +1,7 @@
 package com.game.re_tac_toe.controller;
 
 import com.game.re_tac_toe.entity.Player;
-import com.game.re_tac_toe.repositories.PlayerRepository;
+import com.game.re_tac_toe.repository.PlayerRepository;
 import com.game.re_tac_toe.service.GameService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -21,7 +21,7 @@ public class GameController {
     }
 
     @MessageMapping("/game.join")
-    public void joinGame(@Payload String avatarName, Principal principal /* here there is one more argument i.e sending a string */) {
+    public void joinGame(@Payload String avatarName, Principal principal) {
         String username = principal.getName();
         Optional<Player> playerOpt = playerRepository.findByUser_Username(username);
         Player player = null;
@@ -33,5 +33,17 @@ public class GameController {
         }
 
         gameService.findMatch(player);
+    }
+
+    @MessageMapping("/game.ready")
+    public void playerReady(@Payload String roomId, Principal principal) {
+        if (principal == null) {
+            System.out.println("Cannot ready up without authenticated principal.");
+            return;
+        }
+
+        System.out.println("Room :  " + roomId);
+
+        gameService.playerReady(roomId, principal.getName());
     }
 }

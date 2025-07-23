@@ -1,5 +1,6 @@
 package com.game.re_tac_toe.config;
 
+import com.game.re_tac_toe.security.AuthChannelInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;

@@ -5,6 +5,7 @@ import NotFoundPage from "./components/NotFoundPage/NotFoundPage";
 import Logic from "./Logic";
 import { AuthProvider } from "./context/AuthContext";
 import RequireAuth from "./context/RequireAuth";
+import Room from "./components/Room/Room";
 
 export default function App() {
   return (
@@ -13,14 +14,9 @@ export default function App() {
         <Background />
         <Routes>
           <Route path="/" element={<PlayerRegistration />}/>
-          <Route 
-            path="/logic" 
-            element={
-              <RequireAuth>
-                <Logic />
-              </RequireAuth>
-            }
-          />
+          <Route path="/logic" element={ <RequireAuth> <Logic /> </RequireAuth>} />
+          {/* <Route path="/room" element={ <RequireAuth> <Room /> </RequireAuth>} /> */}
+          <Route path="/room/:roomId" element={<Room />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Router>

@@ -1,4 +1,4 @@
-package com.game.re_tac_toe.repositories;
+package com.game.re_tac_toe.repository;
 
 import com.game.re_tac_toe.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;

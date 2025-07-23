@@ -1,6 +1,6 @@
 package com.game.re_tac_toe.entity;
 
-import com.game.re_tac_toe.dto.LoginRequest;
+import com.game.re_tac_toe.entity.enums.PlayerStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -53,4 +53,5 @@ public class Player {
     public String getAvatarName() {
         return this.avatarName;
     }
+
 }

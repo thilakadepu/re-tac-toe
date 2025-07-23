@@ -1,10 +1,13 @@
 package com.game.re_tac_toe.entity;
 
+import com.game.re_tac_toe.entity.enums.GameStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+//import java.util.Arrays;
+import java.util.Arrays;
 import java.util.UUID;
 
 @Entity
@@ -28,17 +31,24 @@ public class GameRoom {
     @Enumerated(EnumType.STRING)
     private GameStatus status;
 
-    private String board;
+    private char[][] board;
 
-    private String currentPlayerUsername;
+    private boolean player1Ready;
+    private boolean player2Ready;
 
     public GameRoom(Player player1, Player player2) {
         this.id = UUID.randomUUID().toString();
         this.player1 = player1;
         this.player2 = player2;
-        this.status = GameStatus.IN_PROGRESS;
-        this.board = "_________"; // Empty board
-        this.currentPlayerUsername = player1.getUser().getUsername();
+        this.status = GameStatus.PENDING_READY;
+
+        this.player1Ready = false;
+        this.player2Ready = false;
+
+        this.board = new char[3][3];
+        for (char[] row : this.board) {
+            Arrays.fill(row, '_');
+        }
     }
 
     public String getId() {
@@ -57,11 +67,23 @@ public class GameRoom {
         return this.status;
     }
 
-    public String getBoard() {
-        return this.board;
+    public void setStatus(GameStatus status) {
+        this.status = status;
     }
 
-    public String getCurrentPlayerUsername() {
-        return this.currentPlayerUsername;
+    public boolean isPlayer1Ready() {
+        return this.player1Ready;
+    }
+
+    public boolean isPlayer2Ready() {
+        return this.player2Ready;
+    }
+
+    public void setPlayer1Ready(boolean b) {
+        this.player1Ready = b;
+    }
+
+    public void setPlayer2Ready(boolean b) {
+        this.player2Ready = b;
     }
 }
