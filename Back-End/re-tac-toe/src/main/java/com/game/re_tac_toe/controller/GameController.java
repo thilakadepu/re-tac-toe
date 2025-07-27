@@ -20,7 +20,7 @@ public class GameController {
         this.playerRepository = playerRepository;
     }
 
-    @MessageMapping("/game.join")
+    @MessageMapping("/game/join")
     public void joinGame(@Payload String avatarName, Principal principal) {
         String username = principal.getName();
         Optional<Player> playerOpt = playerRepository.findByUser_Username(username);
@@ -35,15 +35,13 @@ public class GameController {
         gameService.findMatch(player);
     }
 
-    @MessageMapping("/game.ready")
+    @MessageMapping("/game/ready")
     public void playerReady(@Payload String roomId, Principal principal) {
         if (principal == null) {
             System.out.println("Cannot ready up without authenticated principal.");
             return;
         }
-
         System.out.println("Room :  " + roomId);
-
         gameService.playerReady(roomId, principal.getName());
     }
 }

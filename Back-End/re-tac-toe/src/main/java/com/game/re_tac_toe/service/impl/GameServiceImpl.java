@@ -1,7 +1,8 @@
 package com.game.re_tac_toe.service.impl;
 
 import com.game.re_tac_toe.dto.GameRoomDto;
-import com.game.re_tac_toe.dto.PreGameDto;
+import com.game.re_tac_toe.dto.ReadyUpdateResponseDto;
+import com.game.re_tac_toe.dto.RedirectToRoomDto;
 import com.game.re_tac_toe.entity.GameRoom;
 import com.game.re_tac_toe.entity.Player;
 import com.game.re_tac_toe.entity.enums.GameStatus;
@@ -44,11 +45,24 @@ public class GameServiceImpl implements GameService {
             gameRoomRepository.save(gameRoom);
             System.out.println("DATABASE: GameRoom created and saved with ID: " + gameRoom.getId());
 
-            PreGameDto forCurrentPlayer = new PreGameDto(gameRoom.getId(), opponent.getUser().getUsername(), opponent.getAvatarName());
-            PreGameDto forOpponent = new PreGameDto(gameRoom.getId(), currentPlayer.getUser().getUsername(), currentPlayer.getAvatarName());
+            RedirectToRoomDto player1 = new RedirectToRoomDto(
+                    currentPlayer.getUser().getUsername(),
+                    currentPlayer.getAvatarName(),
+                    opponent.getUser().getUsername(),
+                    opponent.getAvatarName(),
+                    gameRoom.getId()
+            );
 
-            simpMessagingTemplate.convertAndSendToUser( currentPlayer.getUser().getUsername(),"/queue/match.found",forCurrentPlayer);
-            simpMessagingTemplate.convertAndSendToUser(opponent.getUser().getUsername(),"/queue/match.found",forOpponent);
+            RedirectToRoomDto player2 = new RedirectToRoomDto(
+                    opponent.getUser().getUsername(),
+                    opponent.getAvatarName(),
+                    currentPlayer.getUser().getUsername(),
+                    currentPlayer.getAvatarName(),
+                    gameRoom.getId()
+            );
+
+            simpMessagingTemplate.convertAndSendToUser( currentPlayer.getUser().getUsername(),"/queue/match/found",player1);
+            simpMessagingTemplate.convertAndSendToUser(opponent.getUser().getUsername(),"/queue/match/found",player2);
         } else {
             System.out.println("No opponent found for " + currentPlayer.getUser().getUsername() + ". They will continue waiting.");
         }
@@ -76,7 +90,6 @@ public class GameServiceImpl implements GameService {
 
         gameRoomRepository.save(gameRoom);
 
-
         if (gameRoom.isPlayer1Ready() && gameRoom.isPlayer2Ready()) {
             gameRoom.setStatus(GameStatus.IN_PROGRESS);
 
@@ -86,18 +99,8 @@ public class GameServiceImpl implements GameService {
             gameRoomRepository.save(gameRoom);
             playerRepository.saveAll(List.of(gameRoom.getPlayer1(), gameRoom.getPlayer2()));
 
-
-            simpMessagingTemplate.convertAndSendToUser(
-                    player1Username,
-                    "/queue/ready.updates",
-                    new GameRoomDto(player1Username, gameRoom.getPlayer1().getAvatarName(), player2Username, gameRoom.getPlayer2().getAvatarName())
-            );
-
-            simpMessagingTemplate.convertAndSendToUser(
-                    player2Username,
-                    "/queue/ready.updates",
-                    new GameRoomDto(player2Username, gameRoom.getPlayer2().getAvatarName(), player1Username, gameRoom.getPlayer1().getAvatarName())
-            );
+            simpMessagingTemplate.convertAndSendToUser(player1Username,"/queue/ready/updates",new ReadyUpdateResponseDto("SUCCESS"));
+            simpMessagingTemplate.convertAndSendToUser(player2Username,"/queue/ready/updates",new ReadyUpdateResponseDto("SUCCESS"));
         }
     }
 }

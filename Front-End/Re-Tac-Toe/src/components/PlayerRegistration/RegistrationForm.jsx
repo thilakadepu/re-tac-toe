@@ -8,7 +8,7 @@ import { getRandomImageName } from "../../helpers/imageHelper"
 
 export default function RegistrationForm({ isDuplicateUserName, isSubmitted, player1Name, onSubmit}) {
   const [avatar, setAvatar] = useState(null);
-  const [isConnected, setIsConnected] = useState(false)
+  const [isMatchFound, setIsMatchFound] = useState(false)
 
   useEffect(() => {
     setAvatar(getRandomImageName())
@@ -21,11 +21,11 @@ export default function RegistrationForm({ isDuplicateUserName, isSubmitted, pla
           {!isSubmitted ? (
             <EditablePlayerCardSection avatar={avatar} isDuplicateUserName={isDuplicateUserName}/>
           ) : (
-            <PlayerCardDisplay avatar={avatar} isDuplicateUserName = {isDuplicateUserName} player1Name={player1Name} setIsConnected={setIsConnected} />
+            <PlayerCardDisplay avatar={avatar} isDuplicateUserName = {isDuplicateUserName} player1Name={player1Name} setIsMatchFound={setIsMatchFound} />
           )}
         </AnimatePresence>
         <button type='submit' className="play-btn">
-          {!isConnected ? (!isSubmitted ? "Play" : "Connecting ...") : "Connected"}
+          {!isMatchFound ? (!isSubmitted ? "Play" : "Matching ....") : "Match Found"}
         </button>
       </Form>
     </Formik> 

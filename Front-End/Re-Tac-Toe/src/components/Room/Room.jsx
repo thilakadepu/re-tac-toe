@@ -1,42 +1,57 @@
-import { useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useParams } from "react-router-dom"
+import MatchUpScreen from "../MatchUpScreen/MatchUpScreen";
 
-import Board from "../Board/Board";
-import WaitingForOpponent from "../WaitingForOpponent/WaitingForOpponent";
-import { connect, sendReadyStatus, subscribeToReadyConfirmation } from "../../services/connection";
 import { getToken } from "../../services/authToken";
+import { connect, disconnect, sendReadyStatus, subscribeToReadyConfirmation } from "../../services/connection"
+
+import './Room.css'
 
 export default function Room() {
+  const location = useLocation();
+  const { currentPlayer, opponentPlayer } = location.state;
   const { roomId } = useParams();
+  
+  const [isConnected, setIsConnected] = useState('false');
 
   useEffect(() => {
-    if (!roomId) {
-      console.error("No Room ID found in URL.");
-      return;
-    }
-
     const token = getToken();
     if (!token) {
-      console.error("No token found.");
-      return;
+      console.error("Authentication token not found. Cannot connect to the game server.");
+      return; 
     }
 
-    const afterConnected = () => {
-      console.log(`Connection successful for room: ${roomId}. Sending ready status...`);
-      sendReadyStatus(roomId);
-      subscribeToReadyConfirmation((gameStartMessage) => {
-        console.log("Game is starting!", gameStartMessage);
-      });
-    };
-    
-    connect(token, afterConnected);
+    const handleSubscribeToReadyConfirmation = (msg) => {
+      if (msg === 'SUCCESS') {
+        setIsConnected(true);
+      }
+    }
 
-  }, [roomId]); 
+    const handleSendReady = () => {
+      sendReadyStatus(roomId);
+      subscribeToReadyConfirmation(handleSubscribeToReadyConfirmation);
+    }
+
+    connect(token, handleSendReady);
+
+    return () => {
+      disconnect();
+    };
+  }, [])
 
   return (
-    <>
-      {/* <WaitingForOpponent /> */}
-      <Board />
-    </>
-  );
+    <main>
+      <section className="match-up-screen">
+      <MatchUpScreen
+        player1Name={currentPlayer.name}
+        player1Avatar={currentPlayer.avatarName}
+        player2Name={opponentPlayer.name}
+        player2Avatar={opponentPlayer.avatarName}
+      />
+      <button type='submit' className="play-btn">
+        Connecting
+      </button>
+    </section>
+    </main>
+  )
 }
