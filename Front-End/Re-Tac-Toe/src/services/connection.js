@@ -56,6 +56,39 @@ const subscribeToReadyConfirmation = (handleSubscribeToReadyConfirmation) => {
   }
 };
 
+const subscribeToChoice = (handleToChoice) => {
+  if (stompClient && stompClient.connected) {
+    stompClient.subscribe('/user/queue/choice', (message) => {
+      const data = JSON.parse(message.body);
+      console.log(data);
+      handleToChoice(data); 
+    });
+  } else {
+    console.error("STOMP client not connected. Cannot subscribe for ready confirmation.");
+  }
+}
+
+const sendChoice = (payload) => {
+  if (stompClient && stompClient.connected) {
+    stompClient.send('/app/game/choice', {}, JSON.stringify(payload));
+    console.log(payload);
+  } else {
+    console.error("STOMP client not connected. Cannot send ready status.");
+  }
+}
+
+const subscribeToToken = (handleSubscribeToToken) => {
+  if (stompClient && stompClient.connected) {
+    stompClient.subscribe('/user/queue/token', (message) => {
+      const data = JSON.parse(message.body);
+      console.log(data);
+      handleSubscribeToToken(data); 
+    });
+  } else {
+    console.error("STOMP client not connected. Cannot subscribe for ready confirmation.");
+  }
+}
+
 const disconnect = () => {
   if (stompClient) {
     console.log("Disconnected!")
@@ -69,5 +102,8 @@ export {
   subscribeToGameStart,
   joinGame,
   sendReadyStatus,
-  subscribeToReadyConfirmation
+  subscribeToReadyConfirmation,
+  subscribeToChoice,
+  sendChoice,
+  subscribeToToken
 };

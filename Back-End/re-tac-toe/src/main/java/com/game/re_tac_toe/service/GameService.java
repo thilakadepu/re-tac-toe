@@ -7,4 +7,6 @@ public interface GameService {
     void findMatch(Player currentPlayer);
 
     void playerReady(String roomId, String username);
+
+    void setPlayerChoice(String roomId, String username, String choice);
 }

@@ -1,0 +1,88 @@
+.choice-app-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(8px);
+    font-family: 'Fredoka', sans-serif;
+}
+
+.choice-card {
+    width: 420px;
+    border-radius: 1.25rem;
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.choice-card h1 {
+    /* color: #E2E8F0; */
+    font-size: 1.95rem;
+    font-weight: 600; 
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 0;
+    margin-bottom: 2rem;
+}
+
+.button-container {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.choice-btn {
+    width: 120px;
+    height: 120px;
+    background-color: #1F2937;
+    border-radius: 1rem;
+    border: 2px solid #374151;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+    font-weight: 700;
+    transition: all 0.2s ease-in-out;
+    font-family: 'Fredoka', sans-serif;
+}
+
+button.choice-btn {
+    cursor: pointer;
+}
+
+button.choice-btn.X:hover {
+    transform: translateY(-5px);
+    border-color: rgba(242, 193, 68, 0.5);
+    box-shadow: 0 0 25px rgba(242, 193, 68, 0.3);
+}
+
+button.choice-btn.O:hover {
+    transform: translateY(-5px);
+    border-color: rgba(114, 207, 249, 0.5);
+    box-shadow: 0 0 25px rgba(114, 207, 249, 0.3);
+}
+
+.choice-btn.X, .X{
+    color: #F2C144;
+}
+
+.choice-btn.X.selected {
+    background-color: #F2C144;
+    color: #311B4B;
+    border-color: #F2C144;
+    transform: translateY(-5px);
+    box-shadow: 0 0 30px rgba(242, 193, 68, 0.6);
+}
+
+.choice-btn.O, .O{
+    color: #72CFF9;
+}
+
+.choice-btn.O.selected {
+    background-color: #72CFF9;
+    color: #311B4B;
+    border-color: #72CFF9;
+    transform: translateY(-5px);
+    box-shadow: 0 0 30px rgba(114, 207, 249, 0.6);
+}

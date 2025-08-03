@@ -1,5 +1,6 @@
 package com.game.re_tac_toe.controller;
 
+import com.game.re_tac_toe.dto.ChoiceRequestDto;
 import com.game.re_tac_toe.entity.Player;
 import com.game.re_tac_toe.repository.PlayerRepository;
 import com.game.re_tac_toe.service.GameService;
@@ -43,5 +44,15 @@ public class GameController {
         }
         System.out.println("Room :  " + roomId);
         gameService.playerReady(roomId, principal.getName());
+    }
+
+    @MessageMapping("/game/choice")
+    public void playerChoice(@Payload ChoiceRequestDto choiceRequestDto, Principal principal) {
+        if (principal == null) {
+            System.out.println("Cannot ready up without authenticated principal.");
+            return;
+        }
+        System.out.println("Choice picked : " + choiceRequestDto.getChoiceToken());
+        gameService.setPlayerChoice(choiceRequestDto.getRoomId(), choiceRequestDto.getUsername(), choiceRequestDto.getChoiceToken());
     }
 }

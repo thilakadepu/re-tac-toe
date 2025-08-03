@@ -3,9 +3,10 @@ import { useLocation, useParams } from "react-router-dom"
 import MatchUpScreen from "../MatchUpScreen/MatchUpScreen";
 
 import { getToken } from "../../services/authToken";
-import { connect, disconnect, sendReadyStatus, subscribeToReadyConfirmation } from "../../services/connection"
+import { connect, sendReadyStatus, subscribeToReadyConfirmation } from "../../services/connection"
 
 import './Room.css'
+import Choice from "../Choice/Choice";
 
 export default function Room() {
   const location = useLocation();
@@ -35,23 +36,27 @@ export default function Room() {
     connect(token, handleSendReady);
 
     return () => {
-      disconnect();
+      // console.log("I'm calling from here !!");
+      // disconnect();
     };
   }, [])
 
   return (
     <main>
-      <section className="match-up-screen">
-      <MatchUpScreen
-        player1Name={currentPlayer.name}
-        player1Avatar={currentPlayer.avatarName}
-        player2Name={opponentPlayer.name}
-        player2Avatar={opponentPlayer.avatarName}
-      />
-      <button type='submit' className="play-btn">
-        Connecting
-      </button>
-    </section>
+      {isConnected ? 
+        <Choice currentPlayerName= {currentPlayer.name} roomId={roomId}/> : 
+        <section className="match-up-screen">
+          <MatchUpScreen
+            player1Name={currentPlayer.name}
+            player1Avatar={currentPlayer.avatarName}
+            player2Name={opponentPlayer.name}
+            player2Avatar={opponentPlayer.avatarName}
+          />
+          <button type='submit' className="play-btn">
+            {!isConnected ? "Connecting" : "Connected"}
+          </button>
+        </section>
+      }
     </main>
   )
 }

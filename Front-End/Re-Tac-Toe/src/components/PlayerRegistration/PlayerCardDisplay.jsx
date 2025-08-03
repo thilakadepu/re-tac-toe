@@ -33,7 +33,7 @@ export default function PlayerCardDisplay({avatar, player1Name, setIsMatchFound}
     connect(token, afterConnected);
 
     return () => {
-      disconnect();
+      // disconnect();
       setIsMatchFound(false)
     };
   }, []);

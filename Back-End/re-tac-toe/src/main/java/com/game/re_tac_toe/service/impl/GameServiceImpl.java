@@ -1,10 +1,12 @@
 package com.game.re_tac_toe.service.impl;
 
-import com.game.re_tac_toe.dto.GameRoomDto;
+import com.game.re_tac_toe.dto.ChoiceResponseDto;
+import com.game.re_tac_toe.dto.ChoiceRoleResponseDto;
 import com.game.re_tac_toe.dto.ReadyUpdateResponseDto;
 import com.game.re_tac_toe.dto.RedirectToRoomDto;
 import com.game.re_tac_toe.entity.GameRoom;
 import com.game.re_tac_toe.entity.Player;
+import com.game.re_tac_toe.entity.enums.ChoiceRole;
 import com.game.re_tac_toe.entity.enums.GameStatus;
 import com.game.re_tac_toe.entity.enums.PlayerStatus;
 import com.game.re_tac_toe.repository.GameRoomRepository;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 public class GameServiceImpl implements GameService {
@@ -96,11 +99,82 @@ public class GameServiceImpl implements GameService {
             gameRoom.getPlayer1().setStatus(PlayerStatus.PLAYING);
             gameRoom.getPlayer2().setStatus(PlayerStatus.PLAYING);
 
+            boolean isPlayer1Chooser = new Random().nextBoolean();
+            Player chooser = isPlayer1Chooser ? gameRoom.getPlayer1() : gameRoom.getPlayer2();
+            Player nonChooser = isPlayer1Chooser ? gameRoom.getPlayer2() : gameRoom.getPlayer1();
+
+            gameRoom.setChooserPlayer(chooser);
+            gameRoom.setNonChooserPlayer(nonChooser);
+
             gameRoomRepository.save(gameRoom);
             playerRepository.saveAll(List.of(gameRoom.getPlayer1(), gameRoom.getPlayer2()));
 
             simpMessagingTemplate.convertAndSendToUser(player1Username,"/queue/ready/updates",new ReadyUpdateResponseDto("SUCCESS"));
             simpMessagingTemplate.convertAndSendToUser(player2Username,"/queue/ready/updates",new ReadyUpdateResponseDto("SUCCESS"));
+
+            simpMessagingTemplate.convertAndSendToUser(player1Username, "/queue/choice", new ChoiceRoleResponseDto(isPlayer1Chooser ? ChoiceRole.CHOOSER : ChoiceRole.NON_CHOOSER));
+            simpMessagingTemplate.convertAndSendToUser(player2Username, "/queue/choice", new ChoiceRoleResponseDto(isPlayer1Chooser ? ChoiceRole.NON_CHOOSER : ChoiceRole.CHOOSER));
         }
+    }
+
+    @Override
+    @Transactional
+    public void setPlayerChoice(String roomId, String username, String choice) {
+        GameRoom gameRoom = gameRoomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalStateException("GameRoom not found with id: " + roomId));
+
+        Player player = playerRepository.findByUser_Username(username)
+                .orElseThrow(() -> new IllegalStateException("Player not found with username: " + username));
+
+        if (!gameRoom.getChooserPlayer().getUser().getUsername().equals(username)) {
+            System.err.println("SECURITY VIOLATION: Player " + username + " is not authorized to choose the token.");
+            return;
+        }
+
+        char token = Character.toUpperCase(choice.trim().charAt(0));
+        if (token != 'X' && token != 'O') {
+            System.err.println("Invalid token choice by " + username + ": " + token);
+            return;
+        }
+
+        Player chooser = gameRoom.getChooserPlayer();
+        Player nonChooser = gameRoom.getNonChooserPlayer();
+
+        boolean isChooserPlayer1 = chooser.getId().equals(gameRoom.getPlayer1().getId());
+
+        if (isChooserPlayer1) {
+            gameRoom.setPlayer1Token(String.valueOf(token));
+            gameRoom.setPlayer2Token(String.valueOf(token == 'X' ? 'O' : 'X'));
+        } else {
+            gameRoom.setPlayer2Token(String.valueOf(token));
+            gameRoom.setPlayer1Token(String.valueOf(token == 'X' ? 'O' : 'X'));
+        }
+
+        if (isChooserPlayer1) {
+            gameRoom.setPlayer1Turn(false);
+            gameRoom.setPlayer2Turn(true);
+        } else {
+            gameRoom.setPlayer1Turn(true);
+            gameRoom.setPlayer2Turn(false);
+        }
+
+        gameRoomRepository.save(gameRoom);
+
+        System.out.println("Token chosen: " + username + " chose " + token +
+                ", assigned to " + chooser.getUser().getUsername() + " / " +
+                (token == 'X' ? 'O' : 'X') + " assigned to " + nonChooser.getUser().getUsername());
+
+        simpMessagingTemplate.convertAndSendToUser(
+                chooser.getUser().getUsername(),
+                "/queue/token",
+                new ChoiceResponseDto(token)
+        );
+
+        simpMessagingTemplate.convertAndSendToUser(
+                nonChooser.getUser().getUsername(),
+                "/queue/token",
+                new ChoiceResponseDto(token == 'X' ? 'O' : 'X')
+        );
+
     }
 }

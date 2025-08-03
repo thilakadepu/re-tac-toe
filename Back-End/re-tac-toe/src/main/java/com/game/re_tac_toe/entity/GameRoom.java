@@ -36,6 +36,23 @@ public class GameRoom {
     private boolean player1Ready;
     private boolean player2Ready;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "chooser_player_id")
+    private Player chooserPlayer;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "non_chooser_player_id")
+    private Player nonChooserPlayer;
+
+    @Column(length = 1)
+    private String player1Token;
+
+    @Column(length = 1)
+    private String player2Token;
+
+    private boolean player1Turn;
+    private boolean player2Turn;
+
     public GameRoom(Player player1, Player player2) {
         this.id = UUID.randomUUID().toString();
         this.player1 = player1;
