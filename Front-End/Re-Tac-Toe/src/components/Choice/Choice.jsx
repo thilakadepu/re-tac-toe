@@ -7,7 +7,7 @@ import DivChoice from '../DivChoice/DivChoice';
 
 const ROLE_CHOOSER = 'CHOOSER';
 
-export default function Choice({ currentPlayerName, roomId }) {
+export default function Choice({ currentPlayerName, roomId, onChoiceComplete, onSetCurrentPlayerToken, onSetOpponentPlayerToken}) {
   const [selectedChoice, setSelectedChoice] = useState(null);
   const [delayedSelectedChoice, setDelayedSelectedChoice] = useState(null);
   const [isChooser, setIsChooser] = useState(false);
@@ -39,9 +39,23 @@ export default function Choice({ currentPlayerName, roomId }) {
     const timeout = setTimeout(() => {
       setDelayedSelectedChoice(selectedChoice);
     }, 800); 
-
-    return () => clearTimeout(timeout);
+    
+    return () => {
+      clearTimeout(timeout);
+    }
   }, [selectedChoice]);
+
+  useEffect(() => {
+    if (delayedSelectedChoice !== null) {
+      const timeout = setTimeout(() => {
+        onSetCurrentPlayerToken?.(delayedSelectedChoice);
+        onSetOpponentPlayerToken?.(delayedSelectedChoice === 'X' ? 'O' : 'X');
+        onChoiceComplete?.();
+      }, 800);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [delayedSelectedChoice]);
 
   const handleSelectChoice = (choice) => {
     if (selectedChoice || !isChooser) return;

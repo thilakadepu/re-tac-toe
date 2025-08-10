@@ -1,0 +1,33 @@
+button.grid {
+  height: 70px;
+  width: 70px;
+  background-color: #43115B;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+button.grid:hover {
+  background-color: #5d1a7a;
+  transform: scale(1.03);
+}
+
+button.grid:active {
+  transform: scale(0.98);
+}
+
+button.grid.x {
+  color: #DCBF3F;
+}
+
+button.grid.o {
+  color: #72CFF9;
+}

@@ -1,50 +1,94 @@
 import { useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom"
+import { useLocation, useParams } from "react-router-dom";
 import MatchUpScreen from "../MatchUpScreen/MatchUpScreen";
 
 import { getToken } from "../../services/authToken";
-import { connect, sendReadyStatus, subscribeToReadyConfirmation } from "../../services/connection"
+import {
+  connect,
+  sendReadyStatus,
+  subscribeToReadyConfirmation,
+} from "../../services/connection";
 
-import './Room.css'
+import "./Room.css";
 import Choice from "../Choice/Choice";
+import GameBoard from "../GameBoard/GameBoard";
 
 export default function Room() {
   const location = useLocation();
   const { currentPlayer, opponentPlayer } = location.state;
   const { roomId } = useParams();
-  
-  const [isConnected, setIsConnected] = useState('false');
+
+  const [isConnected, setIsConnected] = useState(false);
+  const [isChoosingCompleted, setIsChoosingCompleted] = useState(false);
+  const [currentPlayerToken, setCurrentPlayerToken] = useState(null);
+  const [opponentPlayerToken, setOpponentPlayerToken] = useState(null);
+
+  const [board, setBoard] = useState(
+    Array.from({ length: 9 }, (_, i) => ({ id: i, value: null }))
+  );
+  const [currentTurn, setCurrentTurn] = useState(null);
+  const [scores, setScores] = useState({ X: 0, O: 0 });
 
   useEffect(() => {
     const token = getToken();
     if (!token) {
-      console.error("Authentication token not found. Cannot connect to the game server.");
-      return; 
+      console.error("No auth token found — cannot connect.");
+      return;
     }
 
-    const handleSubscribeToReadyConfirmation = (msg) => {
-      if (msg === 'SUCCESS') {
-        setIsConnected(true);
-      }
-    }
+    const onReadyConfirmed = (msg) => {
+      if (msg === "SUCCESS") setIsConnected(true);
+    };
 
-    const handleSendReady = () => {
+    const onGameUpdate = (gameState) => {
+      if (gameState.board) setBoard(gameState.board);
+      if (gameState.currentTurn) setCurrentTurn(gameState.currentTurn);
+      if (gameState.scores) setScores(gameState.scores);
+    };
+
+    const onConnect = () => {
       sendReadyStatus(roomId);
-      subscribeToReadyConfirmation(handleSubscribeToReadyConfirmation);
-    }
+      subscribeToReadyConfirmation(onReadyConfirmed);
+    };
 
-    connect(token, handleSendReady);
+    connect(token, onConnect);
 
     return () => {
-      // console.log("I'm calling from here !!");
-      // disconnect();
+
     };
-  }, [])
+  }, [roomId]);
+
+  const handleCellClick = (cellId) => {
+    if (currentTurn !== currentPlayerToken) return;
+    console.log(board);
+  };
 
   return (
     <main>
-      {isConnected ? 
-        <Choice currentPlayerName= {currentPlayer.name} roomId={roomId}/> : 
+      {!isConnected ? (
+        !isChoosingCompleted ? (
+          <Choice
+            currentPlayerName={currentPlayer.name}
+            roomId={roomId}
+            onChoiceComplete={() => setIsChoosingCompleted(true)}
+            onSetCurrentPlayerToken={setCurrentPlayerToken}
+            onSetOpponentPlayerToken={setOpponentPlayerToken}
+          />
+        ) : (
+          <GameBoard
+            currentPlayerName={currentPlayer.name}
+            currentPlayerAvatar={currentPlayer.avatarName}
+            opponentPlayerName={opponentPlayer.name}
+            opponentPlayerAvatar={opponentPlayer.avatarName}
+            currentPlayerToken={currentPlayerToken}
+            opponentPlayerToken={opponentPlayerToken}
+            board={board}
+            currentTurn={currentTurn}
+            scores={scores}
+            onCellClick={handleCellClick}
+          />
+        )
+      ) : (
         <section className="match-up-screen">
           <MatchUpScreen
             player1Name={currentPlayer.name}
@@ -52,11 +96,11 @@ export default function Room() {
             player2Name={opponentPlayer.name}
             player2Avatar={opponentPlayer.avatarName}
           />
-          <button type='submit' className="play-btn">
-            {!isConnected ? "Connecting" : "Connected"}
+          <button type="button" className="play-btn">
+            Connecting...
           </button>
         </section>
-      }
+      )}
     </main>
-  )
+  );
 }

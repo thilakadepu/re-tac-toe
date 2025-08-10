@@ -1,0 +1,78 @@
+.background-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Fredoka', sans-serif;
+  backdrop-filter: blur(8px);
+  min-height: 100vh;
+}
+
+.tic-tac-toe-container {
+  box-sizing: border-box;
+  padding: 34px;
+  width: 400px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.board-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 25px 0;
+}
+
+.player-container,
+.grid-container,
+.action-buttons {
+  width: 100%;
+}
+
+.player-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 1rem;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 80px);
+  gap: 14px;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.btn {
+  padding: 12px 18px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+  flex: 1;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.play-again-btn {
+  background-color: #43115B;
+}
+
+.new-game-btn {
+  background-color: #222;
+}
+
+.btn:hover {
+  opacity: 0.85;
+}
