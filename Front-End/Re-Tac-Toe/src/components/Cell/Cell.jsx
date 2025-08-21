@@ -1,11 +1,11 @@
 import './Cell.css';
 
-export default function Cell({ value, onClick, className }) {
+export default function Cell({ value, className, disabled, onClick}) {
   return (
     <button
       className={`grid ${className}`}
       onClick={onClick}
-      disabled={!!value}
+      disabled={disabled || !!value}
     >
       {value}
     </button>

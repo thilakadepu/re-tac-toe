@@ -7,6 +7,8 @@ import {
   connect,
   sendReadyStatus,
   subscribeToReadyConfirmation,
+  sendMove,
+  subscribeToGameUpdate
 } from "../../services/connection";
 
 import "./Room.css";
@@ -26,6 +28,7 @@ export default function Room() {
   const [board, setBoard] = useState(
     Array.from({ length: 9 }, (_, i) => ({ id: i, value: null }))
   );
+
   const [currentTurn, setCurrentTurn] = useState(null);
   const [scores, setScores] = useState({ X: 0, O: 0 });
 
@@ -40,12 +43,6 @@ export default function Room() {
       if (msg === "SUCCESS") setIsConnected(true);
     };
 
-    const onGameUpdate = (gameState) => {
-      if (gameState.board) setBoard(gameState.board);
-      if (gameState.currentTurn) setCurrentTurn(gameState.currentTurn);
-      if (gameState.scores) setScores(gameState.scores);
-    };
-
     const onConnect = () => {
       sendReadyStatus(roomId);
       subscribeToReadyConfirmation(onReadyConfirmed);
@@ -58,10 +55,40 @@ export default function Room() {
     };
   }, [roomId]);
 
+  useEffect(() => {
+    const handleGameUpdate = (gameState) => {
+      if (gameState.board) {
+        const updatedBoard = gameState.board.map((cell, index) => ({
+          id: index,
+          value: cell === "X" || cell === "O" ? cell : null,
+        }));
+        setBoard(updatedBoard);
+      }
+
+      if (gameState.currentTurn) {
+        setCurrentTurn(gameState.currentTurn);
+      }
+
+      if (gameState.scores) {
+        setScores(gameState.scores);
+      }
+    };
+
+    
+  }, []);
+
   const handleCellClick = (cellId) => {
-    if (currentTurn !== currentPlayerToken) return;
-    console.log(board);
+    if (!currentTurn || board[cellId].value) {
+      return;
+    }
+
+    sendMove({
+      roomId,
+      cellId,
+      playerToken: currentPlayerToken,
+    });
   };
+
 
   return (
     <main>
@@ -70,6 +97,8 @@ export default function Room() {
           <Choice
             currentPlayerName={currentPlayer.name}
             roomId={roomId}
+            setBoard={setBoard}
+            setCurrentTurn={setCurrentTurn}
             onChoiceComplete={() => setIsChoosingCompleted(true)}
             onSetCurrentPlayerToken={setCurrentPlayerToken}
             onSetOpponentPlayerToken={setOpponentPlayerToken}

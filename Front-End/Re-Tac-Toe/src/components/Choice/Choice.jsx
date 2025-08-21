@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 
 import './Choice.css';
-import { sendChoice, subscribeToChoice, subscribeToToken } from '../../services/connection';
+import { sendChoice, subscribeToChoice, subscribeToGameUpdate, subscribeToToken } from '../../services/connection';
 import ButtonChoice from '../ButtonChoice/ButtonChoice';
 import DivChoice from '../DivChoice/DivChoice';
 
 const ROLE_CHOOSER = 'CHOOSER';
 
-export default function Choice({ currentPlayerName, roomId, onChoiceComplete, onSetCurrentPlayerToken, onSetOpponentPlayerToken}) {
+export default function Choice({ currentPlayerName, roomId, setBoard, setCurrentTurn, onChoiceComplete, onSetCurrentPlayerToken, onSetOpponentPlayerToken}) {
   const [selectedChoice, setSelectedChoice] = useState(null);
   const [delayedSelectedChoice, setDelayedSelectedChoice] = useState(null);
   const [isChooser, setIsChooser] = useState(false);
@@ -29,6 +29,22 @@ export default function Choice({ currentPlayerName, roomId, onChoiceComplete, on
 
     subscribeToToken(handleSubscribeToToken);
   }, []);
+
+  useEffect(() => {
+    const handleSubscribeToGameUpdate = (data) => {
+      if (data.board) {
+        const updatedBoard = data.board.map((cell, index) => ({
+          id: index,
+          value: cell === "X" || cell === "O" ? cell : null,
+        }));
+
+        setBoard(updatedBoard);
+        setCurrentTurn(data.myTurn);
+      }
+    };
+
+    subscribeToGameUpdate(handleSubscribeToGameUpdate);
+  }, []); 
 
   useEffect(() => {
     if (selectedChoice === null) {

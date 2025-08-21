@@ -17,7 +17,7 @@ export default function GameBoard({
 }) {
   const cellElements = (Array.isArray(board) ? board : []).map((cell) => {
     const cellClass = cell.value ? cell.value.toLowerCase() : "";
-    const disabled = currentTurn !== currentPlayerToken || cell.value !== null;
+    const disabled = !currentTurn || cell.value !== null;
 
     return (
       <Cell

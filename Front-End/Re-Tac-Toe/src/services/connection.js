@@ -89,6 +89,26 @@ const subscribeToToken = (handleSubscribeToToken) => {
   }
 }
 
+const subscribeToGameUpdate = (handleSubscribeToGameUpdate) => {
+  if (stompClient && stompClient.connected) {
+    stompClient.subscribe('/user/queue/game/update', (message) => {
+      const data = JSON.parse(message.body);
+      console.log(data);
+      handleSubscribeToGameUpdate(data);
+    });
+  } else {
+    console.error("STOMP client not connected. Cannot subscribe for game updates.");
+  }
+}
+
+const sendMove = (payload) => {
+  if (stompClient && stompClient.connected) {
+    stompClient.subscribe('app/game/move', {}, JSON.stringify(payload));
+  } else {
+    console.error("STOMP client not connected. Cannot subscribe for game updates.");
+  }
+}
+
 const disconnect = () => {
   if (stompClient) {
     console.log("Disconnected!")
@@ -105,5 +125,7 @@ export {
   subscribeToReadyConfirmation,
   subscribeToChoice,
   sendChoice,
-  subscribeToToken
+  subscribeToToken,
+  subscribeToGameUpdate,
+  sendMove
 };
