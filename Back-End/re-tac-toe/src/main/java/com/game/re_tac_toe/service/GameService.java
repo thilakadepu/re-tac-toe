@@ -9,4 +9,6 @@ public interface GameService {
     void playerReady(String roomId, String username);
 
     void setPlayerChoice(String roomId, String username, String choice);
+
+    public void makeMove(String roomId, String username, int position);
 }

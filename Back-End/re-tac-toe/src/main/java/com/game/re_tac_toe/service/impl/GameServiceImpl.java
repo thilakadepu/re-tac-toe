@@ -1,9 +1,6 @@
 package com.game.re_tac_toe.service.impl;
 
-import com.game.re_tac_toe.dto.ChoiceResponseDto;
-import com.game.re_tac_toe.dto.ChoiceRoleResponseDto;
-import com.game.re_tac_toe.dto.ReadyUpdateResponseDto;
-import com.game.re_tac_toe.dto.RedirectToRoomDto;
+import com.game.re_tac_toe.dto.*;
 import com.game.re_tac_toe.entity.GameRoom;
 import com.game.re_tac_toe.entity.Player;
 import com.game.re_tac_toe.entity.enums.ChoiceRole;
@@ -19,6 +16,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+
+import static com.game.re_tac_toe.util.GameLogicUtil.checkForWin;
 
 @Service
 public class GameServiceImpl implements GameService {
@@ -176,5 +175,72 @@ public class GameServiceImpl implements GameService {
                 new ChoiceResponseDto(token == 'X' ? 'O' : 'X')
         );
 
+        Player player1 = gameRoom.getPlayer1();
+        Player player2 = gameRoom.getPlayer2();
+
+        GameUpdateDto updateForPlayer1 = new GameUpdateDto(gameRoom, player1);
+        GameUpdateDto updateForPlayer2 = new GameUpdateDto(gameRoom, player2);
+
+        simpMessagingTemplate.convertAndSendToUser(player1.getUser().getUsername(), "/queue/game/update", updateForPlayer1);
+        simpMessagingTemplate.convertAndSendToUser(player2.getUser().getUsername(), "/queue/game/update", updateForPlayer2);
     }
+
+    @Override
+    @Transactional
+    public void makeMove(String roomId, String username, int position) {
+        GameRoom gameRoom = gameRoomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalStateException("GameRoom not found with id: " + roomId));
+
+        if (gameRoom.getStatus() != GameStatus.IN_PROGRESS) {
+            System.err.println("Move attempted in a game that is not in progress.");
+            return;
+        }
+
+        boolean isPlayer1 = gameRoom.getPlayer1().getUser().getUsername().equals(username);
+        boolean isPlayer2 = gameRoom.getPlayer2().getUser().getUsername().equals(username);
+        if (!isPlayer1 && !isPlayer2) {
+            System.err.println("SECURITY VIOLATION: User " + username + " tried to move in a game they are not in.");
+            return;
+        }
+
+        if ((isPlayer1 && !gameRoom.isPlayer1Turn()) || (isPlayer2 && !gameRoom.isPlayer2Turn())) {
+            System.err.println("Move attempted out of turn by user: " + username);
+            return;
+        }
+
+        if (gameRoom.getMoveHistory().size() == 9) {
+            int oldestMovePosition = gameRoom.getMoveHistory().removeFirst();
+            gameRoom.getBoard().set(oldestMovePosition, '_');
+            System.out.println("Board was full. Clearing oldest move at position: " + oldestMovePosition);
+        }
+
+
+        if (position < 0 || position > 8 || gameRoom.getBoard().get(position) != '_') {
+            System.err.println("Invalid move to position " + position + " by user: " + username);
+            return;
+        }
+
+        char token = isPlayer1 ? gameRoom.getPlayer1Token().charAt(0) : gameRoom.getPlayer2Token().charAt(0);
+        gameRoom.getBoard().set(position, token);
+        gameRoom.getMoveHistory().add(position);
+
+        if (checkForWin(gameRoom.getBoard(), token)) {
+            gameRoom.setStatus(GameStatus.FINISHED_WIN);
+        } else {
+            gameRoom.setPlayer1Turn(!gameRoom.isPlayer1Turn());
+            gameRoom.setPlayer2Turn(!gameRoom.isPlayer2Turn());
+        }
+
+        gameRoomRepository.save(gameRoom);
+
+        Player player1 = gameRoom.getPlayer1();
+        Player player2 = gameRoom.getPlayer2();
+
+        GameUpdateDto updateForPlayer1 = new GameUpdateDto(gameRoom, player1);
+        GameUpdateDto updateForPlayer2 = new GameUpdateDto(gameRoom, player2);
+
+        simpMessagingTemplate.convertAndSendToUser(player1.getUser().getUsername(), "/queue/game/update", updateForPlayer1);
+        simpMessagingTemplate.convertAndSendToUser(player2.getUser().getUsername(), "/queue/game/update", updateForPlayer2);
+    }
+
 }

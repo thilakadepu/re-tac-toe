@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 //import java.util.Arrays;
-import java.util.Arrays;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "game_rooms")
@@ -31,7 +30,9 @@ public class GameRoom {
     @Enumerated(EnumType.STRING)
     private GameStatus status;
 
-    private char[][] board;
+    @ElementCollection
+    @OrderColumn
+    private List<Character> board;
 
     private boolean player1Ready;
     private boolean player2Ready;
@@ -53,19 +54,18 @@ public class GameRoom {
     private boolean player1Turn;
     private boolean player2Turn;
 
+    @ElementCollection
+    @OrderColumn
+    private List<Integer> moveHistory = new ArrayList<>();
+
     public GameRoom(Player player1, Player player2) {
         this.id = UUID.randomUUID().toString();
         this.player1 = player1;
         this.player2 = player2;
         this.status = GameStatus.PENDING_READY;
-
         this.player1Ready = false;
         this.player2Ready = false;
-
-        this.board = new char[3][3];
-        for (char[] row : this.board) {
-            Arrays.fill(row, '_');
-        }
+        this.board = new ArrayList<>(Collections.nCopies(9, '_'));
     }
 
     public String getId() {
