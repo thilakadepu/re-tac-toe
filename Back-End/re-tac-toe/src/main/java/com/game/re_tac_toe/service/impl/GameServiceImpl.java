@@ -9,6 +9,7 @@ import com.game.re_tac_toe.entity.enums.PlayerStatus;
 import com.game.re_tac_toe.repository.GameRoomRepository;
 import com.game.re_tac_toe.repository.PlayerRepository;
 import com.game.re_tac_toe.service.GameService;
+import com.game.re_tac_toe.util.GameLogicUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -208,13 +209,6 @@ public class GameServiceImpl implements GameService {
             return;
         }
 
-        if (gameRoom.getMoveHistory().size() == 9) {
-            int oldestMovePosition = gameRoom.getMoveHistory().removeFirst();
-            gameRoom.getBoard().set(oldestMovePosition, '_');
-            System.out.println("Board was full. Clearing oldest move at position: " + oldestMovePosition);
-        }
-
-
         if (position < 0 || position > 8 || gameRoom.getBoard().get(position) != '_') {
             System.err.println("Invalid move to position " + position + " by user: " + username);
             return;
@@ -223,12 +217,28 @@ public class GameServiceImpl implements GameService {
         char token = isPlayer1 ? gameRoom.getPlayer1Token().charAt(0) : gameRoom.getPlayer2Token().charAt(0);
         gameRoom.getBoard().set(position, token);
         gameRoom.getMoveHistory().add(position);
+        System.out.println(gameRoom.getBoard());
+        System.out.println(gameRoom.getMoveHistory());
 
         if (checkForWin(gameRoom.getBoard(), token)) {
-            gameRoom.setStatus(GameStatus.FINISHED_WIN);
+            gameRoom.setStatus(GameStatus.FINISHED);
+
+            List<Integer> winningCombo = GameLogicUtil.getWinningCombination(gameRoom.getBoard(), token);
+            if (winningCombo != null) {
+                gameRoom.setWinningCombination(winningCombo);
+            }
+
         } else {
             gameRoom.setPlayer1Turn(!gameRoom.isPlayer1Turn());
             gameRoom.setPlayer2Turn(!gameRoom.isPlayer2Turn());
+
+            if (gameRoom.getMoveHistory().size() == 9) {
+                int oldestMovePosition = gameRoom.getMoveHistory().removeFirst();
+                gameRoom.getBoard().set(oldestMovePosition, '_');
+                System.out.println("Board was full. Clearing oldest move at position: " + oldestMovePosition);
+                System.out.println(gameRoom.getBoard());
+                System.out.println(gameRoom.getMoveHistory());
+            }
         }
 
         gameRoomRepository.save(gameRoom);

@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-//import java.util.Arrays;
 import java.util.*;
 
 @Entity
@@ -58,6 +57,10 @@ public class GameRoom {
     @OrderColumn
     private List<Integer> moveHistory = new ArrayList<>();
 
+    @ElementCollection
+    @OrderColumn
+    private List<Integer> winningCombination = new ArrayList<>();
+
     public GameRoom(Player player1, Player player2) {
         this.id = UUID.randomUUID().toString();
         this.player1 = player1;
@@ -66,41 +69,5 @@ public class GameRoom {
         this.player1Ready = false;
         this.player2Ready = false;
         this.board = new ArrayList<>(Collections.nCopies(9, '_'));
-    }
-
-    public String getId() {
-        return this.id;
-    }
-
-    public Player getPlayer1() {
-        return this.player1;
-    }
-
-    public Player getPlayer2() {
-        return this.player2;
-    }
-
-    public GameStatus getStatus() {
-        return this.status;
-    }
-
-    public void setStatus(GameStatus status) {
-        this.status = status;
-    }
-
-    public boolean isPlayer1Ready() {
-        return this.player1Ready;
-    }
-
-    public boolean isPlayer2Ready() {
-        return this.player2Ready;
-    }
-
-    public void setPlayer1Ready(boolean b) {
-        this.player1Ready = b;
-    }
-
-    public void setPlayer2Ready(boolean b) {
-        this.player2Ready = b;
     }
 }

@@ -31,3 +31,17 @@ button.grid.x {
 button.grid.o {
   color: #72CFF9;
 }
+
+.grid.winning.x {
+  background-color: #DCBF3F; 
+  color: #43115B;           
+}
+
+.grid.winning.o {
+  background-color: #72CFF9; 
+  color: #43115B;
+}
+
+.grid.disabled {
+  cursor: not-allowed;
+}

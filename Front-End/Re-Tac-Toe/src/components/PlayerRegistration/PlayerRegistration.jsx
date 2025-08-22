@@ -1,6 +1,5 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useContext } from 'react';
 
-import { getRandomImageName} from '../../helpers/imageHelper';
 import RegistrationForm from './RegistrationForm';
 import '../PlayerRegistration/PlayerRegistration.css';
 import { loginUser, registerUser } from '../../services/api.js';

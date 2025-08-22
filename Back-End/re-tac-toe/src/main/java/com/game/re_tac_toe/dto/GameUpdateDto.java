@@ -18,11 +18,13 @@ public class GameUpdateDto {
     private GamePlayerInfoDto opponentPlayer;
     private String currentPlayerToken;
     private boolean isMyTurn;
+    private List<Integer> winningCombination;
 
     public GameUpdateDto(GameRoom gameRoom, Player perspectiveOfPlayer) {
         this.roomId = gameRoom.getId();
         this.status = gameRoom.getStatus();
         this.board = gameRoom.getBoard();
+        this.winningCombination = gameRoom.getWinningCombination();
 
         if (gameRoom.getPlayer1().getId().equals(perspectiveOfPlayer.getId())) {
             this.currentPlayer = new GamePlayerInfoDto(gameRoom.getPlayer1());

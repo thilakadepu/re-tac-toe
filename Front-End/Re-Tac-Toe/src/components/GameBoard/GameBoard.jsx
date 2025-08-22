@@ -13,10 +13,16 @@ export default function GameBoard({
   board = [],
   currentTurn,
   scores = { X: 0, O: 0 },
+  winningCombination = [],
   onCellClick,
 }) {
-  const cellElements = (Array.isArray(board) ? board : []).map((cell) => {
-    const cellClass = cell.value ? cell.value.toLowerCase() : "";
+  const cellElements = board.map((cell) => {
+    const isWinning = winningCombination?.includes(cell.id);
+    const cellClass = [
+      cell.value ? cell.value.toLowerCase() : "",
+      isWinning ? "winning" : "",
+    ].join(" ");
+
     const disabled = !currentTurn || cell.value !== null;
 
     return (
@@ -41,18 +47,19 @@ export default function GameBoard({
               name={currentPlayerName}
               score={scores[currentPlayerToken] ?? 0}
               avatar={resolveImage(currentPlayerAvatar)}
-              isActive={currentTurn === currentPlayerToken}
+              isActive={currentTurn}
               playerClass="player-a"
             />
             <GameRoomPlayerCard
               name={opponentPlayerName}
               score={scores[opponentPlayerToken] ?? 0}
               avatar={resolveImage(opponentPlayerAvatar)}
-              isActive={currentTurn === opponentPlayerToken}
+              isActive={!currentTurn}
               playerClass="player-b"
             />
           </section>
           <section className="grid-container">{cellElements}</section>
+          
           <div className="action-buttons">
             <button className="btn play-again-btn" disabled>
               Play Again

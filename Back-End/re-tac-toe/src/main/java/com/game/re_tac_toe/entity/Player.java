@@ -34,24 +34,4 @@ public class Player {
         this.status = PlayerStatus.WAITING;
     }
 
-    public void setStatus(PlayerStatus playerStatus) {
-        this.status = playerStatus;
-    }
-
-    public void setAvatarName(String avatarName) {
-        this.avatarName = avatarName;
-    }
-
-    public User getUser() {
-        return this.user;
-    }
-
-    public UUID getId() {
-        return this.id;
-    }
-
-    public String getAvatarName() {
-        return this.avatarName;
-    }
-
 }
