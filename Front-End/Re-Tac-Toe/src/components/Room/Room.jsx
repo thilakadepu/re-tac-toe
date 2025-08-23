@@ -36,8 +36,9 @@ export default function Room() {
   const [winner, setWinner] = useState(null);
   const [loser, setLoser] = useState(null);
   const [showWinMessage, setShowWinMessage] = useState(false);
+
   const [rematchUsername, setRematchUsername] = useState(null);
-  const [isRequestingRematch, setIsRequestingRematch] = useState(false);
+  const [rematchStatus, setRematchStatus] = useState("idle");
 
   const myTurnRef = useRef(myTurn);
 
@@ -89,7 +90,7 @@ export default function Room() {
       }
 
       setMyTurn(gameState.myTurn);
-      setGameStatus(gameStatus.status);
+      setGameStatus(gameState.status);
     };
 
     const handleGameWin = (winData) => {
@@ -107,6 +108,7 @@ export default function Room() {
     const handleRematchRequest = (data) => {
       console.log("Rematch requested by:", data.requesterUsername);
       setRematchUsername(data.requesterUsername);
+      setRematchStatus("pending"); 
     };
 
     const handleRematchResponse = (data) => {
@@ -117,12 +119,16 @@ export default function Room() {
         setShowWinMessage(false);
         setRematchUsername(null);
         setIsRequestingRematch(false);
+        
+        setBoard(Array.from({ length: 9 }, (_, i) => ({ id: i, value: null })));
       } else {
         console.log("Rematch declined.");
         setRematchUsername(null);
         setIsRequestingRematch(false);
       }
     };
+
+
 
     const onConnect = () => {
       sendReadyStatus(roomId);
@@ -134,9 +140,19 @@ export default function Room() {
     };
 
     connect(token, onConnect);
-
-    // return () => {};
   }, [roomId]);
+
+  const resetGameForRematch = () => {
+    setWinner(null);
+    setLoser(null);
+    setShowWinMessage(false);
+    setRematchUsername(null);
+    setRematchStatus("idle");
+    setBoard(Array.from({ length: 9 }, (_, i) => ({ id: i, value: null })));
+    setWinningCombination([]);
+    setScores({ X: 0, O: 0 });
+    setCurrentTurn(null);
+  };
 
   const handleCellClick = (cellId) => {
     console.log("🖱️ Cell clicked:", cellId);  
@@ -167,10 +183,10 @@ export default function Room() {
   const handlePlayAgain = () => {
     console.log("Play Again clicked");
     setShowWinMessage(false);
-    setIsRequestingRematch(true);
     setWinner(null);
     setLoser(null);
     console.log("Requesting rematch...");
+    setRematchStatus("requested");
     sendRematchRequest({ roomId });
   };
 
@@ -179,11 +195,22 @@ export default function Room() {
   };
 
   const handleRematchAccept = () => {
-    sendRematchResponse({ roomId, accepted: true });
+  sendRematchResponse({ roomId, accepted: true });
+
+    setWinner(null);
+    setLoser(null);
+    setShowWinMessage(false);
+    setRematchUsername(null);
+    setRematchStatus("idle");
+    setBoard(Array.from({ length: 9 }, (_, i) => ({ id: i, value: null })));
+    setWinningCombination([]);
   };
+
 
   const handleRematchDecline = () => {
     sendRematchResponse({ roomId, accepted: false });
+    setRematchStatus("idle");
+    setRematchUsername(null);
   };
 
   const isWinner = winner === currentPlayer.name;
@@ -238,7 +265,7 @@ export default function Room() {
             rematchRequestFromPlayer={rematchUsername}
             onRematchAccept={handleRematchAccept}
             onRematchDecline={handleRematchDecline}
-            isRequestingRematch={isRequestingRematch}
+            rematchStatus={rematchStatus}
           />
         )
       ) : (

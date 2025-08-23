@@ -24,17 +24,10 @@ export default function GameBoard({
   rematchRequestFromPlayer = null,
   onRematchAccept,
   onRematchDecline,
-  isRequestingRematch = false
+  rematchStatus = "idle", 
 }) {
-  const [showRematchModal, setShowRematchModal] = useState(false);
-
   const isOpponentRequestingRematch =
-    rematchRequestFromPlayer &&
-    rematchRequestFromPlayer !== currentPlayerName;
-
-  useEffect(() => {
-    setShowRematchModal(isOpponentRequestingRematch);
-  }, [isOpponentRequestingRematch]);
+    rematchRequestFromPlayer && rematchRequestFromPlayer !== currentPlayerName;
 
   const renderCells = board.map((cell) => {
     const isWinning = winningCombination.includes(cell.id);
@@ -58,11 +51,43 @@ export default function GameBoard({
     );
   });
 
+  if (rematchStatus === "requested") {
+    return (
+      <div className="background-wrapper">
+        <article className="tic-tac-toe-container">
+          <div className="board-wrapper">
+            <section className="player-container">
+              <GameRoomPlayerCard
+                name={currentPlayerName}
+                score={scores[currentPlayerToken] ?? 0}
+                avatar={resolveImage(currentPlayerAvatar)}
+                isActive={currentTurn}
+                playerClass="player-a"
+              />
+              <GameRoomPlayerCard
+                name={opponentPlayerName}
+                score={scores[opponentPlayerToken] ?? 0}
+                avatar={resolveImage(opponentPlayerAvatar)}
+                isActive={!currentTurn}
+                playerClass="player-b"
+              />
+            </section>
+            <div className="rematch-requesting-message">
+              <span className="spinner" aria-label="Loading">
+                ⏳
+              </span>
+              <p>Waiting for opponent to accept your rematch request...</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    );
+  }
+
   return (
     <div className="background-wrapper">
       <article className="tic-tac-toe-container">
         <div className="board-wrapper">
-          {/* Player Cards */}
           <section className="player-container">
             <GameRoomPlayerCard
               name={currentPlayerName}
@@ -80,45 +105,26 @@ export default function GameBoard({
             />
           </section>
 
-          {/* Game State Blocks */}
-          {winner ? (
-            // Rematch Requested By You
-            isRequestingRematch ? (
-              <div className="rematch-requesting-message">
-                <span className="spinner" aria-label="Loading">⏳</span>
-                <p>Waiting for opponent to accept your rematch request...</p>
+          {rematchStatus === "pending" && isOpponentRequestingRematch ? (
+            <RematchRequestModal
+              visible={true}
+              playerName={rematchRequestFromPlayer}
+              onAccept={onRematchAccept}
+              onReject={onRematchDecline}
+            />
+          ) : winner ? (
+            <div className="winner-container">
+              <h2 className="winner-title">🎉 {winner} won the game!</h2>
+              <p className="winner-subtitle">😢 Better luck next time, {loser}.</p>
+              <div className="action-buttons">
+                <button className="btn play-again-btn" onClick={onPlayAgain}>
+                  Play Again
+                </button>
+                <button className="btn new-game-btn" onClick={onNewGame}>
+                  New Game
+                </button>
               </div>
-            ) : // Rematch Requested By Opponent
-            isOpponentRequestingRematch && showRematchModal ? (
-              <RematchRequestModal
-                visible={true}
-                playerName={rematchRequestFromPlayer}
-                onAccept={() => {
-                  onRematchAccept();
-                  setShowRematchModal(false);
-                }}
-                onReject={() => {
-                  onRematchDecline();
-                  setShowRematchModal(false);
-                }}
-              />
-            ) : (
-              // Default Winner Message
-              <div className="winner-container">
-                <h2 className="winner-title">🎉 {winner} won the game!</h2>
-                <p className="winner-subtitle">
-                  😢 Better luck next time, {loser}.
-                </p>
-                <div className="action-buttons">
-                  <button className="btn play-again-btn" onClick={onPlayAgain}>
-                    Play Again
-                  </button>
-                  <button className="btn new-game-btn" onClick={onNewGame}>
-                    New Game
-                  </button>
-                </div>
-              </div>
-            )
+            </div>
           ) : (
             <section className="grid-container">{renderCells}</section>
           )}
