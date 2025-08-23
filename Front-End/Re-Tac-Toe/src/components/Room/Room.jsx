@@ -123,7 +123,7 @@ export default function Room() {
       } else {
         setRematchUsername(null);
         setRematchStatus("idle");
-        setRematchDeclineMessage("Your opponent declined the rematch.");
+        setRematchDeclineMessage("Rematch request declined.");
       }
     };
 
