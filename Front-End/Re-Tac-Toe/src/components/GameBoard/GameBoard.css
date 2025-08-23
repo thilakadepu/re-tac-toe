@@ -161,3 +161,16 @@
   margin-top: 0.75rem;
   z-index: 1000;
 }
+
+.rematch-decline-notification {
+  background-color: #ffdddd;
+  border: 1px solid #ff5c5c;
+  padding: 12px 20px;
+  margin: 15px auto;
+  color: #a70000;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 600;
+  max-width: 400px;
+  box-shadow: 0 0 8px rgba(255, 92, 92, 0.5);
+}

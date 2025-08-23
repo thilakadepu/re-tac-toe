@@ -39,6 +39,7 @@ export default function Room() {
 
   const [rematchUsername, setRematchUsername] = useState(null);
   const [rematchStatus, setRematchStatus] = useState("idle");
+  const [rematchDeclineMessage, setRematchDeclineMessage] = useState(null);
 
   const myTurnRef = useRef(myTurn);
 
@@ -65,8 +66,6 @@ export default function Room() {
     };
 
     const handleGameUpdate = (gameState) => {
-      console.log("📡 Game update received:", gameState);
-
       if (gameState.board) {
         const updatedBoard = gameState.board.map((cell, index) => ({
           id: index,
@@ -83,7 +82,7 @@ export default function Room() {
         setScores(gameState.scores);
       }
 
-       if (gameState.winningCombination) {
+      if (gameState.winningCombination) {
         setWinningCombination(gameState.winningCombination);
       } else {
         setWinningCombination([]);
@@ -95,8 +94,6 @@ export default function Room() {
     };
 
     const handleGameWin = (winData) => {
-      console.log("🏁 Game won:", winData);
-
       setWinner(winData.winnerUsername);
       setLoser(winData.loserUsername);
       setWinningCombination(winData.winningCombination);
@@ -107,33 +104,28 @@ export default function Room() {
     };
 
     const handleRematchRequest = (data) => {
-      console.log("Rematch requested by:", data.requesterUsername);
       setRematchUsername(data.requesterUsername);
-      setRematchStatus("pending"); 
+      setRematchStatus("pending");
+      setRematchDeclineMessage(null);
     };
 
     const handleRematchResponse = (data) => {
       if (data.accepted) {
-        console.log("✅ Rematch accepted. Resetting game...");
-
         setWinner(null);
         setLoser(null);
         setShowWinMessage(false);
         setRematchUsername(null);
-
-        setRematchStatus("idle"); // ✅ this is critical
-
-        // Reset board for both players
+        setRematchStatus("idle");
+        setRematchDeclineMessage(null);
         setBoard(Array.from({ length: 9 }, (_, i) => ({ id: i, value: null })));
         setWinningCombination([]);
-        setGameStatus(""); // optional: in case you're tracking 'won' or 'finished'
+        setGameStatus("");
       } else {
-        console.log("❌ Rematch declined.");
         setRematchUsername(null);
         setRematchStatus("idle");
+        setRematchDeclineMessage("Your opponent declined the rematch.");
       }
     };
-
 
     const onConnect = () => {
       sendReadyStatus(roomId);
@@ -147,33 +139,8 @@ export default function Room() {
     connect(token, onConnect);
   }, [roomId]);
 
-  const resetGameForRematch = () => {
-    setWinner(null);
-    setLoser(null);
-    setShowWinMessage(false);
-    setRematchUsername(null);
-    setRematchStatus("idle");
-    setBoard(Array.from({ length: 9 }, (_, i) => ({ id: i, value: null })));
-    setWinningCombination([]);
-    setScores({ X: 0, O: 0 });
-    setCurrentTurn(null);
-  };
-
   const handleCellClick = (cellId) => {
-    console.log("🖱️ Cell clicked:", cellId);  
-    console.log("Board value:", board[cellId].value);
-    console.log("My token:", currentPlayerToken);
-    console.log("Is it my turn?", myTurnRef.current);
-
-    if (board[cellId].value) {
-      console.warn("❌ Cell already taken.");
-      return;
-    }
-
-    if (!myTurnRef.current) {
-      console.warn("⛔ Not your turn.");
-      return;
-    }
+    if (board[cellId].value || !myTurnRef.current) return;
 
     const payload = {
       roomId,
@@ -181,16 +148,14 @@ export default function Room() {
       playerToken: currentPlayerToken,
     };
 
-    console.log("📤 Sending move:", payload);
     sendMove(payload);
   };
 
   const handlePlayAgain = () => {
-    console.log("Play Again clicked");
     setShowWinMessage(false);
     setWinner(null);
     setLoser(null);
-    console.log("Requesting rematch...");
+    setRematchDeclineMessage(null);
     setRematchStatus("requested");
     sendRematchRequest({ roomId });
   };
@@ -200,17 +165,17 @@ export default function Room() {
   };
 
   const handleRematchAccept = () => {
-  sendRematchResponse({ roomId, accepted: true });
+    sendRematchResponse({ roomId, accepted: true });
 
     setWinner(null);
     setLoser(null);
     setShowWinMessage(false);
     setRematchUsername(null);
     setRematchStatus("idle");
+    setRematchDeclineMessage(null);
     setBoard(Array.from({ length: 9 }, (_, i) => ({ id: i, value: null })));
     setWinningCombination([]);
   };
-
 
   const handleRematchDecline = () => {
     sendRematchResponse({ roomId, accepted: false });
@@ -219,7 +184,7 @@ export default function Room() {
   };
 
   const isWinner = winner === currentPlayer.name;
-  const shouldShowConfetti = showWinMessage && isWinner
+  const shouldShowConfetti = showWinMessage && isWinner;
 
   return (
     <main>
@@ -271,6 +236,7 @@ export default function Room() {
             onRematchAccept={handleRematchAccept}
             onRematchDecline={handleRematchDecline}
             rematchStatus={rematchStatus}
+            rematchDeclineMessage={rematchDeclineMessage}
           />
         )
       ) : (
@@ -281,7 +247,9 @@ export default function Room() {
             player2Name={opponentPlayer.name}
             player2Avatar={opponentPlayer.avatarName}
           />
-          <button type="button" className="play-btn">Connecting...</button>
+          <button type="button" className="play-btn">
+            Connecting...
+          </button>
         </section>
       )}
     </main>

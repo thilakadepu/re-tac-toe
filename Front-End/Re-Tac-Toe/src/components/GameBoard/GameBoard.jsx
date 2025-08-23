@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import GameRoomPlayerCard from "../GameRoomPlayerCard/GameRoomPlayerCard";
 import Cell from "../Cell/Cell";
 import RematchRequestModal from "../RematchRequestModal/RematchRequestModal";
@@ -24,7 +23,8 @@ export default function GameBoard({
   rematchRequestFromPlayer = null,
   onRematchAccept,
   onRematchDecline,
-  rematchStatus = "idle", 
+  rematchStatus = "idle",
+  rematchDeclineMessage
 }) {
   const isOpponentRequestingRematch =
     rematchRequestFromPlayer && rematchRequestFromPlayer !== currentPlayerName;
@@ -34,7 +34,7 @@ export default function GameBoard({
     const cellClass = [
       cell.value ? cell.value.toLowerCase() : "",
       isWinning ? "winning" : "",
-    ].join(" ");
+    ].filter(Boolean).join(" ");
 
     const disabled = !currentTurn || cell.value !== null;
 
@@ -44,9 +44,7 @@ export default function GameBoard({
         value={cell.value}
         className={cellClass}
         disabled={disabled}
-        onClick={() => {
-          if (!disabled) onCellClick(cell.id);
-        }}
+        onClick={() => !disabled && onCellClick(cell.id)}
       />
     );
   });
@@ -72,31 +70,24 @@ export default function GameBoard({
             />
           </section>
 
-          {/* 1. If rematch requested (you asked for rematch) */}
-          {rematchStatus === "requested" && (
-            <div className="rematch-requesting-message">
-              <span className="spinner" aria-label="Loading">
-                ⏳
-              </span>
-              <p>Waiting for opponent to accept your rematch request...</p>
-            </div>
-          )}
-
-          {/* 2. If rematch pending (opponent requested rematch, you decide) */}
-          {rematchStatus === "pending" && isOpponentRequestingRematch && (
-            <RematchRequestModal
-              visible={true}
-              playerName={rematchRequestFromPlayer}
-              onAccept={onRematchAccept}
-              onReject={onRematchDecline}
-            />
-          )}
-
-          {/* 3. If winner exists and no rematch in progress */}
-          {winner && rematchStatus === "idle" && (
+          {/* Show Winner or Rematch Decline */}
+          {/* Winner or Rematch Decline Message */}
+          {(winner || rematchDeclineMessage) && rematchStatus === "idle" ? (
             <div className="winner-container">
-              <h2 className="winner-title">🎉 {winner} won the game!</h2>
-              <p className="winner-subtitle">😢 Better luck next time, {loser}.</p>
+              {winner && (
+                <h2 className="winner-title">🎉 {winner} won the game!</h2>
+              )}
+              {winner && loser && (
+                <p className="winner-subtitle">😢 Better luck next time, {loser}.</p>
+              )}
+
+              {/* 👇 This message shows only to the player who requested the rematch */}
+              {rematchDeclineMessage && (
+                <div className="rematch-decline-notification">
+                  {rematchDeclineMessage}
+                </div>
+              )}
+
               <div className="action-buttons">
                 <button className="btn play-again-btn" onClick={onPlayAgain}>
                   Play Again
@@ -106,10 +97,19 @@ export default function GameBoard({
                 </button>
               </div>
             </div>
-          )}
-
-          {/* 4. Default: show board only when no rematch modal/waiting/winner */}
-          {!winner && rematchStatus === "idle" && (
+          ) : rematchStatus === "requested" ? (
+            <div className="rematch-requesting-message">
+              <span className="spinner" aria-label="Loading">⏳</span>
+              <p>Waiting for opponent to accept your rematch request…</p>
+            </div>
+          ) : rematchStatus === "pending" && isOpponentRequestingRematch ? (
+            <RematchRequestModal
+              visible={true}
+              playerName={rematchRequestFromPlayer}
+              onAccept={onRematchAccept}
+              onReject={onRematchDecline}
+            />
+          ) : (
             <section className="grid-container">{renderCells}</section>
           )}
         </div>
