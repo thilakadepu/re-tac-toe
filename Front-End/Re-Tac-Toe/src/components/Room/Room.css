@@ -22,3 +22,28 @@ section.match-up-screen {
 button.play-btn {
   margin-top: 15px;
 }
+
+.winner-overlay {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.85);
+  padding: 2rem 3rem;
+  border-radius: 12px;
+  color: #fff;
+  z-index: 999;
+  text-align: center;
+  font-size: 1.5rem;
+  animation: fadeIn 0.6s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0%);
+  }
+}

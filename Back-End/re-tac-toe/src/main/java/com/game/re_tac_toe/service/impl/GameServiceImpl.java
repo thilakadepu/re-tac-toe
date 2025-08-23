@@ -226,8 +226,29 @@ public class GameServiceImpl implements GameService {
             List<Integer> winningCombo = GameLogicUtil.getWinningCombination(gameRoom.getBoard(), token);
             if (winningCombo != null) {
                 gameRoom.setWinningCombination(winningCombo);
-            }
 
+                String winnerUsername = isPlayer1
+                        ? gameRoom.getPlayer1().getUser().getUsername()
+                        : gameRoom.getPlayer2().getUser().getUsername();
+
+                String loserUsername = isPlayer1
+                        ? gameRoom.getPlayer2().getUser().getUsername()
+                        : gameRoom.getPlayer1().getUser().getUsername();
+
+                GameWinDto winDto = new GameWinDto(winnerUsername, loserUsername, winningCombo);
+
+                simpMessagingTemplate.convertAndSendToUser(
+                        gameRoom.getPlayer1().getUser().getUsername(),
+                        "/queue/game/win",
+                        winDto
+                );
+                simpMessagingTemplate.convertAndSendToUser(
+                        gameRoom.getPlayer2().getUser().getUsername(),
+                        "/queue/game/win",
+                        winDto
+                );
+            }
+            
         } else {
             gameRoom.setPlayer1Turn(!gameRoom.isPlayer1Turn());
             gameRoom.setPlayer2Turn(!gameRoom.isPlayer2Turn());

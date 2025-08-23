@@ -14,7 +14,11 @@ export default function GameBoard({
   currentTurn,
   scores = { X: 0, O: 0 },
   winningCombination = [],
+  winner = null,
+  loser = null,
   onCellClick,
+  onPlayAgain,
+  onNewGame,
 }) {
   const cellElements = board.map((cell) => {
     const isWinning = winningCombination?.includes(cell.id);
@@ -58,16 +62,25 @@ export default function GameBoard({
               playerClass="player-b"
             />
           </section>
-          <section className="grid-container">{cellElements}</section>
-          
-          <div className="action-buttons">
-            <button className="btn play-again-btn" disabled>
-              Play Again
-            </button>
-            <button className="btn new-game-btn" disabled>
-              New Game
-            </button>
-          </div>
+
+          {winner ? (
+            <>
+              <div className="winner-container">
+                <h2 className="winner-title">🎉 {winner} won the game!</h2>
+                <p className="winner-subtitle">😢 Better luck next time, {loser}.</p>
+                <div className="action-buttons">
+                  <button className="btn play-again-btn" onClick={onPlayAgain}>
+                    Play Again
+                  </button>
+                  <button className="btn new-game-btn" onClick={onNewGame}>
+                    New Game
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <section className="grid-container">{cellElements}</section>
+          )}
         </div>
       </article>
     </div>

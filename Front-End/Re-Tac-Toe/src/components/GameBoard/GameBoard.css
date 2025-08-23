@@ -76,3 +76,29 @@
 .btn:hover {
   opacity: 0.85;
 }
+
+.winner-container {
+  text-align: center;
+  margin-top: 2rem;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+.winner-title {
+  font-size: 1.6rem;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.winner-subtitle {
+  font-size: 1.1rem;
+  color: #ddd;
+  margin-bottom: 1.5rem;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+

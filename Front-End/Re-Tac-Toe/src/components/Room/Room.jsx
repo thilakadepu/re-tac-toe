@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import MatchUpScreen from "../MatchUpScreen/MatchUpScreen";
+import Confetti from "react-confetti";
 
 import { getToken } from "../../services/authToken";
 import {
@@ -9,11 +9,13 @@ import {
   subscribeToReadyConfirmation,
   sendMove,
   subscribeToGameUpdate,
+  subscribeToGameWinUpdate,
 } from "../../services/connection";
 
-import "./Room.css";
 import Choice from "../Choice/Choice";
 import GameBoard from "../GameBoard/GameBoard";
+import MatchUpScreen from "../MatchUpScreen/MatchUpScreen";
+import "./Room.css";
 
 export default function Room() {
   const location = useLocation();
@@ -27,6 +29,10 @@ export default function Room() {
   const [myTurn, setMyTurn] = useState(false);
   const [gameStatus, setGameStatus] = useState('');
   const [winningCombination, setWinningCombination] = useState([]);
+  const [winner, setWinner] = useState(null);
+  const [loser, setLoser] = useState(null);
+  const [showWinMessage, setShowWinMessage] = useState(false);
+
   const myTurnRef = useRef(myTurn);
 
   const [board, setBoard] = useState(
@@ -80,10 +86,23 @@ export default function Room() {
       setGameStatus(gameStatus.status);
     };
 
+    const handleGameWin = (winData) => {
+      console.log("🏁 Game won:", winData);
+
+      setWinner(winData.winnerUsername);
+      setLoser(winData.loserUsername);
+      setWinningCombination(winData.winningCombination);
+
+      setTimeout(() => {
+        setShowWinMessage(true);
+      }, 1800);
+    };
+
     const onConnect = () => {
       sendReadyStatus(roomId);
       subscribeToReadyConfirmation(onReadyConfirmed);
       subscribeToGameUpdate(handleGameUpdate);
+      subscribeToGameWinUpdate(handleGameWin);
     };
 
     connect(token, onConnect);
@@ -117,8 +136,37 @@ export default function Room() {
     sendMove(payload);
   };
 
+  const handlePlayAgain = () => {
+    console.log("Play Again clicked");
+    setShowWinMessage(false);
+  };
+
+  const handleNewGame = () => {
+    console.log("New Game clicked");
+    setShowWinMessage(false);
+  };
+
+  const isWinner = winner === currentPlayer.name;
+  const shouldShowConfetti = showWinMessage && isWinner
+
   return (
     <main>
+      {shouldShowConfetti && (
+        <Confetti
+          width={window.innerWidth}
+          height={window.innerHeight}
+          numberOfPieces={220}
+          gravity={0.3}
+          recycle={true}
+          style={{
+            position: "fixed",
+            top: 0,
+            zIndex: 9999,
+            pointerEvents: "none",
+          }}
+        />
+      )}
+
       {!isConnected ? (
         !isChoosingCompleted ? (
           <Choice
@@ -143,6 +191,10 @@ export default function Room() {
             scores={scores}
             winningCombination={winningCombination}
             onCellClick={handleCellClick}
+            winner={showWinMessage ? winner : null}
+            loser={showWinMessage ? loser : null}
+            onPlayAgain={handlePlayAgain}
+            onNewGame={handleNewGame}
           />
         )
       ) : (

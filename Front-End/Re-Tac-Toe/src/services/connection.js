@@ -101,7 +101,6 @@ const subscribeToGameUpdate = (handleSubscribeToGameUpdate) => {
   }
 }
 
-
 const sendMove = (payload) => {
   if (stompClient && stompClient.connected) {
     console.log("sendMove: sending to /app/game/move -> view here", payload);
@@ -111,6 +110,17 @@ const sendMove = (payload) => {
   }
 }
 
+const subscribeToGameWinUpdate = (handleSubscribeToGameWinUpdate) => {
+  if (stompClient && stompClient.connected) {
+    stompClient.subscribe('/user/queue/game/win', (message) => {
+      const data = JSON.parse(message.body);
+      console.log("Game update received:", data);
+      handleSubscribeToGameWinUpdate(data);
+    });
+  } else {
+    console.error("subscribeToGameWinUpdate: STOMP client not connected.");
+  }
+}
 
 const disconnect = () => {
   if (stompClient) {
@@ -130,5 +140,6 @@ export {
   sendChoice,
   subscribeToToken,
   subscribeToGameUpdate,
+  subscribeToGameWinUpdate,
   sendMove
 };
