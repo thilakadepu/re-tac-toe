@@ -14,9 +14,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 import static com.game.re_tac_toe.util.GameLogicUtil.checkForWin;
 
@@ -266,6 +264,69 @@ public class GameServiceImpl implements GameService {
 
         Player player1 = gameRoom.getPlayer1();
         Player player2 = gameRoom.getPlayer2();
+
+        GameUpdateDto updateForPlayer1 = new GameUpdateDto(gameRoom, player1);
+        GameUpdateDto updateForPlayer2 = new GameUpdateDto(gameRoom, player2);
+
+        simpMessagingTemplate.convertAndSendToUser(player1.getUser().getUsername(), "/queue/game/update", updateForPlayer1);
+        simpMessagingTemplate.convertAndSendToUser(player2.getUser().getUsername(), "/queue/game/update", updateForPlayer2);
+    }
+
+    @Override
+    @Transactional
+    public void requestRematch(String roomId, String username) {
+        GameRoom gameRoom = gameRoomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalStateException("GameRoom not found with id: " + roomId));
+
+        if (gameRoom.getStatus() != GameStatus.FINISHED) {
+            System.err.println("Play again requested for a game not finished.");
+            return;
+        }
+
+        boolean isPlayer1 = gameRoom.getPlayer1().getUser().getUsername().equals(username);
+        if (isPlayer1) {
+            gameRoom.setPlayer1WantsRematch(true);
+        } else {
+            gameRoom.setPlayer2WantsRematch(true);
+        }
+
+        gameRoomRepository.save(gameRoom);
+
+        Player opponent = isPlayer1 ? gameRoom.getPlayer2() : gameRoom.getPlayer1();
+        simpMessagingTemplate.convertAndSendToUser(
+                opponent.getUser().getUsername(),
+                "/queue/rematch/request",
+                new RematchRequestDto(username, roomId)
+        );
+    }
+
+    @Override
+    @Transactional
+    public void respondToRematch(String roomId, String username, boolean accept) {
+        GameRoom gameRoom = gameRoomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalStateException("GameRoom not found with id: " + roomId));
+
+        Player player1 = gameRoom.getPlayer1();
+        Player player2 = gameRoom.getPlayer2();
+
+        if (!accept) {
+            simpMessagingTemplate.convertAndSendToUser(
+                    player1.getUser().getUsername(), "/queue/rematch/response", new RematchResponseDto(false)
+            );
+            simpMessagingTemplate.convertAndSendToUser(
+                    player2.getUser().getUsername(), "/queue/rematch/response", new RematchResponseDto(false)
+            );
+            return;
+        }
+
+        gameRoom.setStatus(GameStatus.IN_PROGRESS);
+        gameRoom.setBoard(new ArrayList<>(Arrays.asList('_','_','_','_','_','_','_','_','_')));
+        gameRoom.setMoveHistory(new LinkedList<>());
+        gameRoom.setWinningCombination(null);
+        gameRoom.setPlayer1WantsRematch(false);
+        gameRoom.setPlayer2WantsRematch(false);
+
+        gameRoomRepository.save(gameRoom);
 
         GameUpdateDto updateForPlayer1 = new GameUpdateDto(gameRoom, player1);
         GameUpdateDto updateForPlayer2 = new GameUpdateDto(gameRoom, player2);

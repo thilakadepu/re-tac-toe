@@ -10,5 +10,9 @@ public interface GameService {
 
     void setPlayerChoice(String roomId, String username, String choice);
 
-    public void makeMove(String roomId, String username, int position);
+    void makeMove(String roomId, String username, int position);
+
+    void requestRematch(String roomId, String username);
+
+    void respondToRematch(String roomId, String username, boolean accept);
 }

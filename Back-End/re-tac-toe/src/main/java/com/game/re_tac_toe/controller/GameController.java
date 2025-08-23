@@ -2,6 +2,8 @@ package com.game.re_tac_toe.controller;
 
 import com.game.re_tac_toe.dto.ChoiceRequestDto;
 import com.game.re_tac_toe.dto.MakeMoveRequestDto;
+import com.game.re_tac_toe.dto.RematchRequestPayload;
+import com.game.re_tac_toe.dto.RematchResponsePayload;
 import com.game.re_tac_toe.entity.Player;
 import com.game.re_tac_toe.repository.PlayerRepository;
 import com.game.re_tac_toe.service.GameService;
@@ -65,4 +67,26 @@ public class GameController {
         }
         gameService.makeMove(request.getRoomId(), principal.getName(), request.getPosition());
     }
+
+    @MessageMapping("/game/rematch/request")
+    public void sendRematchRequest(@Payload RematchRequestPayload payload, Principal principal) {
+        if (principal == null) {
+            System.out.println("Unauthorized play again request.");
+            return;
+        }
+
+        gameService.requestRematch(payload.getRoomId(), principal.getName());
+    }
+
+    @MessageMapping("/game/rematch/respond")
+    public void handleRematchResponse(@Payload RematchResponsePayload payload, Principal principal) {
+        if (principal == null) {
+            System.out.println("Unauthorized play again request.");
+            return;
+        }
+
+        System.out.println(payload.toString());
+        gameService.respondToRematch(payload.getRoomId(), principal.getName(), payload.isAccepted());
+    }
+
 }

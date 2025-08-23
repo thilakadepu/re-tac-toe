@@ -10,6 +10,10 @@ import {
   sendMove,
   subscribeToGameUpdate,
   subscribeToGameWinUpdate,
+  sendRematchRequest,
+  subscribeToRematchRequest,
+  sendRematchResponse,
+  subscribeToRematchResponse
 } from "../../services/connection";
 
 import Choice from "../Choice/Choice";
@@ -32,6 +36,8 @@ export default function Room() {
   const [winner, setWinner] = useState(null);
   const [loser, setLoser] = useState(null);
   const [showWinMessage, setShowWinMessage] = useState(false);
+  const [rematchUsername, setRematchUsername] = useState(null);
+  const [isRequestingRematch, setIsRequestingRematch] = useState(false);
 
   const myTurnRef = useRef(myTurn);
 
@@ -98,20 +104,42 @@ export default function Room() {
       }, 1800);
     };
 
+    const handleRematchRequest = (data) => {
+      console.log("Rematch requested by:", data.requesterUsername);
+      setRematchUsername(data.requesterUsername);
+    };
+
+    const handleRematchResponse = (data) => {
+      if (data.accepted) {
+        console.log("Rematch accepted. Resetting UI...");
+        setWinner(null);
+        setLoser(null);
+        setShowWinMessage(false);
+        setRematchUsername(null);
+        setIsRequestingRematch(false);
+      } else {
+        console.log("Rematch declined.");
+        setRematchUsername(null);
+        setIsRequestingRematch(false);
+      }
+    };
+
     const onConnect = () => {
       sendReadyStatus(roomId);
       subscribeToReadyConfirmation(onReadyConfirmed);
       subscribeToGameUpdate(handleGameUpdate);
       subscribeToGameWinUpdate(handleGameWin);
+      subscribeToRematchRequest(handleRematchRequest);
+      subscribeToRematchResponse(handleRematchResponse);
     };
 
     connect(token, onConnect);
 
-    return () => {};
+    // return () => {};
   }, [roomId]);
 
   const handleCellClick = (cellId) => {
-    console.log("🖱️ Cell clicked:", cellId);
+    console.log("🖱️ Cell clicked:", cellId);  
     console.log("Board value:", board[cellId].value);
     console.log("My token:", currentPlayerToken);
     console.log("Is it my turn?", myTurnRef.current);
@@ -139,11 +167,23 @@ export default function Room() {
   const handlePlayAgain = () => {
     console.log("Play Again clicked");
     setShowWinMessage(false);
+    setIsRequestingRematch(true);
+    setWinner(null);
+    setLoser(null);
+    console.log("Requesting rematch...");
+    sendRematchRequest({ roomId });
   };
 
   const handleNewGame = () => {
     console.log("New Game clicked");
-    setShowWinMessage(false);
+  };
+
+  const handleRematchAccept = () => {
+    sendRematchResponse({ roomId, accepted: true });
+  };
+
+  const handleRematchDecline = () => {
+    sendRematchResponse({ roomId, accepted: false });
   };
 
   const isWinner = winner === currentPlayer.name;
@@ -155,7 +195,7 @@ export default function Room() {
         <Confetti
           width={window.innerWidth}
           height={window.innerHeight}
-          numberOfPieces={220}
+          numberOfPieces={250}
           gravity={0.3}
           recycle={true}
           style={{
@@ -195,6 +235,10 @@ export default function Room() {
             loser={showWinMessage ? loser : null}
             onPlayAgain={handlePlayAgain}
             onNewGame={handleNewGame}
+            rematchRequestFromPlayer={rematchUsername}
+            onRematchAccept={handleRematchAccept}
+            onRematchDecline={handleRematchDecline}
+            isRequestingRematch={isRequestingRematch}
           />
         )
       ) : (

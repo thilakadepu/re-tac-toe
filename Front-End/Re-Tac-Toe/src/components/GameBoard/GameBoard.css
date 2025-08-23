@@ -16,6 +16,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  display: flex;
+  flex-direction: column;
 }
 
 .board-wrapper {
@@ -23,6 +25,7 @@
   flex-direction: column;
   align-items: center;
   margin: 25px 0;
+  width: 100%;
 }
 
 .player-container,
@@ -62,43 +65,99 @@
   cursor: pointer;
   color: #fff;
   flex: 1;
-  transition: background-color 0.2s ease, opacity 0.2s ease;
+  transition: background-color 0.3s ease, opacity 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: 0 3px 10px rgba(67, 17, 91, 0.3);
 }
 
 .play-again-btn {
   background-color: #43115B;
 }
 
+.play-again-btn:hover {
+  background-color: #5e1a83;
+  box-shadow: 0 5px 15px rgba(94, 26, 131, 0.6);
+}
+
 .new-game-btn {
   background-color: #222;
 }
 
+.new-game-btn:hover {
+  background-color: #444;
+  box-shadow: 0 5px 15px rgba(68, 68, 68, 0.6);
+}
+
 .btn:hover {
-  opacity: 0.85;
+  opacity: 0.95;
 }
 
 .winner-container {
   text-align: center;
   margin-top: 2rem;
   animation: fadeIn 0.4s ease-in-out;
+  color: #fff;
 }
 
 .winner-title {
-  font-size: 1.6rem;
-  color: #fff;
+  font-size: 1.8rem;
+  color: #e3dfff;
   margin-bottom: 0.5rem;
+  text-shadow: 0 0 8px #9f80ff;
 }
 
 .winner-subtitle {
-  font-size: 1.1rem;
-  color: #ddd;
+  font-size: 1.2rem;
+  color: #c9c2ff;
   margin-bottom: 1.5rem;
+  font-weight: 500;
 }
 
-.action-buttons {
+.rematch-requesting-message {
+  background: rgba(67, 17, 91, 0.7);
+  border-radius: 20px;
+  padding: 25px 20px;
+  color: #d9c9ff;
+  font-weight: 600;
+  font-size: 1.2rem;
+  text-align: center;
+  box-shadow: 0 0 15px rgba(147, 106, 255, 0.6);
+  user-select: none;
+  margin-top: 2rem;
+  min-height: 72px;
+  line-height: 1.4;
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 12px;
-  margin-top: 20px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
+.rematch-requesting-message .spinner {
+  font-size: 1.5rem;
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg);}
+  100% { transform: rotate(360deg);}
+}
+
+.rematch-requesting-message p {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.action-buttons-container {
+  position: relative;
+  margin-top: 1.5rem;
+}
+
+.modal-overlay-trigger {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 0.75rem;
+  z-index: 1000;
+}

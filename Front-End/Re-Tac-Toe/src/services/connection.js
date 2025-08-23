@@ -122,6 +122,48 @@ const subscribeToGameWinUpdate = (handleSubscribeToGameWinUpdate) => {
   }
 }
 
+const sendRematchRequest = (payload) => {
+  if (stompClient && stompClient.connected) {
+    stompClient.send('/app/game/rematch/request', {}, JSON.stringify(payload));
+    console.log("Sending rematch request : ", payload);
+  } else {
+    console.error("sendRematchRequest: STOMP client not connected. Cannot send rematch.");
+  }
+}
+
+const subscribeToRematchRequest = (handleSubscribeToRematchRequest) => {
+  if (stompClient && stompClient.connected) {
+    stompClient.subscribe('/user/queue/rematch/request', (message) => {
+      const data = JSON.parse(message.body);
+      console.log("Rematch Requested by payload : ", data);
+      handleSubscribeToRematchRequest(data);
+    });
+  } else {
+    console.error("subscribeToRematchRequest: STOMP client not connected.");
+  }
+}
+
+const sendRematchResponse = (payload) => {
+  if (stompClient && stompClient.connected) {
+    stompClient.send('/app/game/rematch/respond', {}, JSON.stringify(payload));
+    console.log("Sending rematch response : ", payload);
+  } else {
+    console.error("sendRematchResponse: STOMP client not connected. Cannot send rematch.");
+  }
+}
+
+const subscribeToRematchResponse = (handleSubscribeToRematchResponse) => {
+  if (stompClient && stompClient.connected) {
+    stompClient.subscribe('/user/queue/rematch/response', (message) => {
+      const data = JSON.parse(message.body);
+      console.log("Response from opponent : ", data);
+      handleSubscribeToRematchResponse(data);
+    });
+  } else {
+    console.error("subscribeToRematchRequest: STOMP client not connected.");
+  }
+}
+
 const disconnect = () => {
   if (stompClient) {
     console.log("Disconnected!")
@@ -141,5 +183,9 @@ export {
   subscribeToToken,
   subscribeToGameUpdate,
   subscribeToGameWinUpdate,
-  sendMove
+  sendMove,
+  sendRematchRequest,
+  subscribeToRematchRequest,
+  sendRematchResponse,
+  subscribeToRematchResponse
 };

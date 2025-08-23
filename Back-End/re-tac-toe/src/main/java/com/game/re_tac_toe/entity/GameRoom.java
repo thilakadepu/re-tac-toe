@@ -54,6 +54,9 @@ public class GameRoom {
     private boolean player1Turn;
     private boolean player2Turn;
 
+    private boolean player1WantsRematch;
+    private boolean player2WantsRematch;
+
     @ElementCollection
     @OrderColumn
     private List<Integer> moveHistory = new ArrayList<>();
@@ -69,6 +72,8 @@ public class GameRoom {
         this.status = GameStatus.PENDING_READY;
         this.player1Ready = false;
         this.player2Ready = false;
+        this.player1WantsRematch = false;
+        this.player2WantsRematch = false;
         this.board = new ArrayList<>(Collections.nCopies(9, '_'));
     }
 }
