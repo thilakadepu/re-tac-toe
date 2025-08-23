@@ -89,6 +89,7 @@ export default function Room() {
         setWinningCombination([]);
       }
 
+      setRematchStatus("idle");
       setMyTurn(gameState.myTurn);
       setGameStatus(gameState.status);
     };
@@ -113,21 +114,25 @@ export default function Room() {
 
     const handleRematchResponse = (data) => {
       if (data.accepted) {
-        console.log("Rematch accepted. Resetting UI...");
+        console.log("✅ Rematch accepted. Resetting game...");
+
         setWinner(null);
         setLoser(null);
         setShowWinMessage(false);
         setRematchUsername(null);
-        setIsRequestingRematch(false);
-        
+
+        setRematchStatus("idle"); // ✅ this is critical
+
+        // Reset board for both players
         setBoard(Array.from({ length: 9 }, (_, i) => ({ id: i, value: null })));
+        setWinningCombination([]);
+        setGameStatus(""); // optional: in case you're tracking 'won' or 'finished'
       } else {
-        console.log("Rematch declined.");
+        console.log("❌ Rematch declined.");
         setRematchUsername(null);
-        setIsRequestingRematch(false);
+        setRematchStatus("idle");
       }
     };
-
 
 
     const onConnect = () => {

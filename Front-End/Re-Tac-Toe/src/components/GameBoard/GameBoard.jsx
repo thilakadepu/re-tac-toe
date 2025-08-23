@@ -51,39 +51,6 @@ export default function GameBoard({
     );
   });
 
-  if (rematchStatus === "requested") {
-    return (
-      <div className="background-wrapper">
-        <article className="tic-tac-toe-container">
-          <div className="board-wrapper">
-            <section className="player-container">
-              <GameRoomPlayerCard
-                name={currentPlayerName}
-                score={scores[currentPlayerToken] ?? 0}
-                avatar={resolveImage(currentPlayerAvatar)}
-                isActive={currentTurn}
-                playerClass="player-a"
-              />
-              <GameRoomPlayerCard
-                name={opponentPlayerName}
-                score={scores[opponentPlayerToken] ?? 0}
-                avatar={resolveImage(opponentPlayerAvatar)}
-                isActive={!currentTurn}
-                playerClass="player-b"
-              />
-            </section>
-            <div className="rematch-requesting-message">
-              <span className="spinner" aria-label="Loading">
-                ⏳
-              </span>
-              <p>Waiting for opponent to accept your rematch request...</p>
-            </div>
-          </div>
-        </article>
-      </div>
-    );
-  }
-
   return (
     <div className="background-wrapper">
       <article className="tic-tac-toe-container">
@@ -105,14 +72,28 @@ export default function GameBoard({
             />
           </section>
 
-          {rematchStatus === "pending" && isOpponentRequestingRematch ? (
+          {/* 1. If rematch requested (you asked for rematch) */}
+          {rematchStatus === "requested" && (
+            <div className="rematch-requesting-message">
+              <span className="spinner" aria-label="Loading">
+                ⏳
+              </span>
+              <p>Waiting for opponent to accept your rematch request...</p>
+            </div>
+          )}
+
+          {/* 2. If rematch pending (opponent requested rematch, you decide) */}
+          {rematchStatus === "pending" && isOpponentRequestingRematch && (
             <RematchRequestModal
               visible={true}
               playerName={rematchRequestFromPlayer}
               onAccept={onRematchAccept}
               onReject={onRematchDecline}
             />
-          ) : winner ? (
+          )}
+
+          {/* 3. If winner exists and no rematch in progress */}
+          {winner && rematchStatus === "idle" && (
             <div className="winner-container">
               <h2 className="winner-title">🎉 {winner} won the game!</h2>
               <p className="winner-subtitle">😢 Better luck next time, {loser}.</p>
@@ -125,7 +106,10 @@ export default function GameBoard({
                 </button>
               </div>
             </div>
-          ) : (
+          )}
+
+          {/* 4. Default: show board only when no rematch modal/waiting/winner */}
+          {!winner && rematchStatus === "idle" && (
             <section className="grid-container">{renderCells}</section>
           )}
         </div>
