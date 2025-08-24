@@ -1,50 +1,53 @@
-import { useState, useContext } from 'react';
-
+import { useContext, useState } from 'react';
 import RegistrationForm from './RegistrationForm';
 import '../PlayerRegistration/PlayerRegistration.css';
-import { loginUser, registerUser } from '../../services/api.js';
-import { saveToken } from '../../services/authToken.js';
 import { AuthContext } from '../../context/AuthContext.jsx';
+import useRegisterAndLogin from '../../hooks/useRegisterAndLogin';
+import { getToken } from '../../services/authToken';
+import { getRandomImageName } from '../../helpers/imageHelper';
+import PlayerCardDisplay from './PlayerCardDisplay.jsx';
 
 export default function PlayerRegistration() {
+  const { login } = useContext(AuthContext);
+  const token = getToken();
+  const [avatar, setAvatar] = useState(getRandomImageName());
+  const [playerName, setPlayerName] = useState(sessionStorage.getItem("playerName"));
+  const [isMatchFound, setIsMatchFound] = useState(false);
 
-  const { login } = useContext(AuthContext)
-  const [isSubmitted, setIsSubmitted] = useState(false)
-  const [player1Name, setPlayer1Name] = useState(null)
-  const [isDuplicateUserName, setIsDuplicateUserName] = useState(false)
+  const {
+    handleRegisterAndLogin,
+    isSubmitted,
+    isDuplicateUserName,
+    player1Name
+  } = useRegisterAndLogin((username) => {
+    login(username, "Player");
+    sessionStorage.setItem("playerName", username);
+    setPlayerName(username);
+  });
 
-  const handleSubmit = (values) => {
-    const payload = {
-      username: values.name,
-      password: values.name
-    };
-
-    registerUser(payload)
-      .then(() => {
-        return loginUser(payload);
-      })
-      .then((loginResponse) => {
-        const token = loginResponse.data.token;
-        saveToken(token);
-        login(payload.username, "Player")
-        setPlayer1Name(values.name);
-        setIsSubmitted(true);
-      })
-      .catch((error) => {
-        // Here if it is error it is setting the user to duplicate 
-        // If backend is not connected also
-        console.error('Registration or Login unsuccessful', error);
-        setIsDuplicateUserName(true)
-      });
-  };
+  if (token && playerName) {
+    return (
+      <main>
+        <PlayerCardDisplay
+          avatar={avatar}
+          player1Name={playerName}
+          setIsMatchFound={setIsMatchFound}
+        />
+      </main>
+    );
+  }
 
   return (
     <main>
       <RegistrationForm
-        isDuplicateUserName = {isDuplicateUserName}
+        isDuplicateUserName={isDuplicateUserName}
         isSubmitted={isSubmitted}
         player1Name={player1Name}
-        onSubmit={handleSubmit}
+        onSubmit={handleRegisterAndLogin}
+        avatar={avatar}
+        setAvatar={setAvatar}
+        isMatchFound={isMatchFound}
+        setIsMatchFound={setIsMatchFound}
       />
     </main>
   );

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Confetti from "react-confetti";
 
 import { getToken } from "../../services/authToken";
@@ -13,7 +14,8 @@ import {
   sendRematchRequest,
   subscribeToRematchRequest,
   sendRematchResponse,
-  subscribeToRematchResponse
+  subscribeToRematchResponse,
+  disconnect
 } from "../../services/connection";
 
 import Choice from "../Choice/Choice";
@@ -25,6 +27,7 @@ export default function Room() {
   const location = useLocation();
   const { currentPlayer, opponentPlayer } = location.state;
   const { roomId } = useParams();
+  const navigate = useNavigate();
 
   const [isConnected, setIsConnected] = useState(false);
   const [isChoosingCompleted, setIsChoosingCompleted] = useState(false);
@@ -161,7 +164,8 @@ export default function Room() {
   };
 
   const handleNewGame = () => {
-    console.log("New Game clicked");
+    disconnect();
+    navigate("/", { replace: true }); 
   };
 
   const handleRematchAccept = () => {
