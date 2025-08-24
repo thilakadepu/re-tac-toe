@@ -13,28 +13,28 @@ export default function GameBoard({
   opponentPlayerToken,
   board = [],
   currentTurn,
-  scores = { X: 0, O: 0 },
+  scores = {},
   winningCombination = [],
   winner = null,
   loser = null,
   onCellClick,
+  showWinMessage,
   onPlayAgain,
   onNewGame,
   rematchRequestFromPlayer = null,
   onRematchAccept,
   onRematchDecline,
   rematchStatus = "idle",
-  rematchDeclineMessage
+  rematchDeclineMessage,
 }) {
   const isOpponentRequestingRematch =
     rematchRequestFromPlayer && rematchRequestFromPlayer !== currentPlayerName;
 
   const renderCells = board.map((cell) => {
     const isWinning = winningCombination.includes(cell.id);
-    const cellClass = [
-      cell.value ? cell.value.toLowerCase() : "",
-      isWinning ? "winning" : "",
-    ].filter(Boolean).join(" ");
+    const classes = [cell.value?.toLowerCase(), isWinning ? "winning" : ""]
+      .filter(Boolean)
+      .join(" ");
 
     const disabled = !currentTurn || cell.value !== null;
 
@@ -42,12 +42,15 @@ export default function GameBoard({
       <Cell
         key={cell.id}
         value={cell.value}
-        className={cellClass}
+        className={classes}
         disabled={disabled}
         onClick={() => !disabled && onCellClick(cell.id)}
       />
     );
   });
+
+  const showWinnerScreen =
+    showWinMessage && winner && rematchStatus === "idle";
 
   return (
     <div className="background-wrapper">
@@ -56,38 +59,35 @@ export default function GameBoard({
           <section className="player-container">
             <GameRoomPlayerCard
               name={currentPlayerName}
-              score={scores[currentPlayerToken] ?? 0}
+              score={scores[currentPlayerName] ?? 0}
               avatar={resolveImage(currentPlayerAvatar)}
               isActive={currentTurn}
               playerClass="player-a"
             />
             <GameRoomPlayerCard
               name={opponentPlayerName}
-              score={scores[opponentPlayerToken] ?? 0}
+              score={scores[opponentPlayerName] ?? 0}
               avatar={resolveImage(opponentPlayerAvatar)}
               isActive={!currentTurn}
               playerClass="player-b"
             />
           </section>
 
-          {/* Show Winner or Rematch Decline */}
-          {/* Winner or Rematch Decline Message */}
-          {(winner || rematchDeclineMessage) && rematchStatus === "idle" ? (
+          {showWinnerScreen || rematchDeclineMessage ? (
             <div className="winner-container">
-              {winner && (
-                <h2 className="winner-title">🎉 {winner} won the game!</h2>
+              {showWinMessage && winner && (
+                <h2 className="winner-title">🎉 {winner} won!</h2>
               )}
-              {winner && loser && (
-                <p className="winner-subtitle">😢 Better luck next time, {loser}.</p>
+              {showWinMessage && loser && (
+                <p className="winner-subtitle">
+                  😢 Better luck next time, {loser}.
+                </p>
               )}
-
-              {/* 👇 This message shows only to the player who requested the rematch */}
               {rematchDeclineMessage && (
                 <div className="rematch-decline-notification">
                   {rematchDeclineMessage}
                 </div>
               )}
-
               <div className="action-buttons">
                 <button className="btn play-again-btn" onClick={onPlayAgain}>
                   Play Again
@@ -99,7 +99,9 @@ export default function GameBoard({
             </div>
           ) : rematchStatus === "requested" ? (
             <div className="rematch-requesting-message">
-              <span className="spinner" aria-label="Loading">⏳</span>
+              <span className="spinner" aria-label="Loading">
+                ⏳
+              </span>
               <p>Waiting for opponent to accept your rematch request…</p>
             </div>
           ) : rematchStatus === "pending" && isOpponentRequestingRematch ? (

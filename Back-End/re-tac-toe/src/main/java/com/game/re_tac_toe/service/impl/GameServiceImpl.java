@@ -225,15 +225,30 @@ public class GameServiceImpl implements GameService {
             if (winningCombo != null) {
                 gameRoom.setWinningCombination(winningCombo);
 
-                String winnerUsername = isPlayer1
-                        ? gameRoom.getPlayer1().getUser().getUsername()
-                        : gameRoom.getPlayer2().getUser().getUsername();
+                String winnerUsername;
+                String loserUsername;
 
-                String loserUsername = isPlayer1
-                        ? gameRoom.getPlayer2().getUser().getUsername()
-                        : gameRoom.getPlayer1().getUser().getUsername();
+                if (isPlayer1) {
+                    gameRoom.setPlayer1Score(gameRoom.getPlayer1Score() + 1);
+                    winnerUsername = gameRoom.getPlayer1().getUser().getUsername();
+                    loserUsername = gameRoom.getPlayer2().getUser().getUsername();
+                } else {
+                    gameRoom.setPlayer2Score(gameRoom.getPlayer2Score() + 1);
+                    winnerUsername = gameRoom.getPlayer2().getUser().getUsername();
+                    loserUsername = gameRoom.getPlayer1().getUser().getUsername();
+                }
 
-                GameWinDto winDto = new GameWinDto(winnerUsername, loserUsername, winningCombo);
+                int winnerScore = isPlayer1 ? gameRoom.getPlayer1Score() : gameRoom.getPlayer2Score();
+                int loserScore = isPlayer1 ? gameRoom.getPlayer2Score() : gameRoom.getPlayer1Score();
+
+                GameWinDto winDto = new GameWinDto(
+                        winnerUsername,
+                        loserUsername,
+                        winningCombo,
+                        winnerScore,
+                        loserScore
+                );
+
 
                 simpMessagingTemplate.convertAndSendToUser(
                         gameRoom.getPlayer1().getUser().getUsername(),

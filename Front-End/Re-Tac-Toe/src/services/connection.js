@@ -27,7 +27,6 @@ const subscribeToGameStart = (onMatchFound) => {
   if (stompClient && stompClient.connected) {
     stompClient.subscribe('/user/queue/match/found', (message) => {
       const gameRoom = JSON.parse(message.body)
-      // console.log("CLIENT RECEIVED: Match found : ", gameRoom);
       if(gameRoom) {
         onMatchFound(gameRoom);
       }
@@ -167,7 +166,7 @@ const subscribeToRematchResponse = (handleSubscribeToRematchResponse) => {
 const disconnect = () => {
   if (stompClient) {
     console.log("Disconnected!")
-    stompClient.disconnect()
+    stompClient.disconnect();
   }
 }
 

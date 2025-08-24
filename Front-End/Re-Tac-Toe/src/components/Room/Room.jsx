@@ -1,21 +1,20 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 import Confetti from "react-confetti";
 
 import { getToken } from "../../services/authToken";
 import {
   connect,
+  disconnect,
   sendReadyStatus,
-  subscribeToReadyConfirmation,
   sendMove,
+  sendRematchRequest,
+  sendRematchResponse,
+  subscribeToReadyConfirmation,
   subscribeToGameUpdate,
   subscribeToGameWinUpdate,
-  sendRematchRequest,
   subscribeToRematchRequest,
-  sendRematchResponse,
   subscribeToRematchResponse,
-  disconnect
 } from "../../services/connection";
 
 import Choice from "../Choice/Choice";
@@ -24,18 +23,24 @@ import MatchUpScreen from "../MatchUpScreen/MatchUpScreen";
 import "./Room.css";
 
 export default function Room() {
-  const location = useLocation();
-  const { currentPlayer, opponentPlayer } = location.state;
+  const { currentPlayer, opponentPlayer } = useLocation().state || {};
   const { roomId } = useParams();
   const navigate = useNavigate();
 
   const [isConnected, setIsConnected] = useState(false);
   const [isChoosingCompleted, setIsChoosingCompleted] = useState(false);
+
   const [currentPlayerToken, setCurrentPlayerToken] = useState(null);
   const [opponentPlayerToken, setOpponentPlayerToken] = useState(null);
+
+  const [board, setBoard] = useState(
+    Array.from({ length: 9 }, (_, i) => ({ id: i, value: null }))
+  );
+  const [currentTurn, setCurrentTurn] = useState(null);
   const [myTurn, setMyTurn] = useState(false);
-  const [gameStatus, setGameStatus] = useState('');
+  const [gameStatus, setGameStatus] = useState("");
   const [winningCombination, setWinningCombination] = useState([]);
+
   const [winner, setWinner] = useState(null);
   const [loser, setLoser] = useState(null);
   const [showWinMessage, setShowWinMessage] = useState(false);
@@ -44,18 +49,22 @@ export default function Room() {
   const [rematchStatus, setRematchStatus] = useState("idle");
   const [rematchDeclineMessage, setRematchDeclineMessage] = useState(null);
 
+  const [scores, setScores] = useState({});
+
   const myTurnRef = useRef(myTurn);
-
-  const [board, setBoard] = useState(
-    Array.from({ length: 9 }, (_, i) => ({ id: i, value: null }))
-  );
-
-  const [currentTurn, setCurrentTurn] = useState(null);
-  const [scores, setScores] = useState({ X: 0, O: 0 });
 
   useEffect(() => {
     myTurnRef.current = myTurn;
   }, [myTurn]);
+
+  useEffect(() => {
+    if (currentPlayer?.name && opponentPlayer?.name) {
+      setScores({
+        [currentPlayer.name]: 0,
+        [opponentPlayer.name]: 0,
+      });
+    }
+  }, [currentPlayer?.name, opponentPlayer?.name]);
 
   useEffect(() => {
     const token = getToken();
@@ -64,147 +73,124 @@ export default function Room() {
       return;
     }
 
-    const onReadyConfirmed = (msg) => {
-      if (msg === "SUCCESS") setIsConnected(true);
-    };
-
-    const handleGameUpdate = (gameState) => {
-      if (gameState.board) {
-        const updatedBoard = gameState.board.map((cell, index) => ({
-          id: index,
-          value: cell === "X" || cell === "O" ? cell : null,
-        }));
-        setBoard(updatedBoard);
-      }
-
-      if (gameState.currentTurn) {
-        setCurrentTurn(gameState.currentTurn);
-      }
-
-      if (gameState.scores) {
-        setScores(gameState.scores);
-      }
-
-      if (gameState.winningCombination) {
-        setWinningCombination(gameState.winningCombination);
-      } else {
-        setWinningCombination([]);
-      }
-
-      setRematchStatus("idle");
-      setMyTurn(gameState.myTurn);
-      setGameStatus(gameState.status);
-    };
-
-    const handleGameWin = (winData) => {
-      setWinner(winData.winnerUsername);
-      setLoser(winData.loserUsername);
-      setWinningCombination(winData.winningCombination);
-
-      setTimeout(() => {
-        setShowWinMessage(true);
-      }, 1800);
-    };
-
-    const handleRematchRequest = (data) => {
-      setRematchUsername(data.requesterUsername);
-      setRematchStatus("pending");
-      setRematchDeclineMessage(null);
-    };
-
-    const handleRematchResponse = (data) => {
-      if (data.accepted) {
-        setWinner(null);
-        setLoser(null);
-        setShowWinMessage(false);
-        setRematchUsername(null);
-        setRematchStatus("idle");
-        setRematchDeclineMessage(null);
-        setBoard(Array.from({ length: 9 }, (_, i) => ({ id: i, value: null })));
-        setWinningCombination([]);
-        setGameStatus("");
-      } else {
-        setRematchUsername(null);
-        setRematchStatus("idle");
-        setRematchDeclineMessage("Rematch request declined.");
-      }
-    };
-
     const onConnect = () => {
       sendReadyStatus(roomId);
-      subscribeToReadyConfirmation(onReadyConfirmed);
-      subscribeToGameUpdate(handleGameUpdate);
-      subscribeToGameWinUpdate(handleGameWin);
-      subscribeToRematchRequest(handleRematchRequest);
-      subscribeToRematchResponse(handleRematchResponse);
+
+      subscribeToReadyConfirmation((msg) => {
+        if (msg === "SUCCESS") setIsConnected(true);
+      });
+
+      subscribeToGameUpdate((gameState) => {
+        if (gameState.board) {
+          const updatedBoard = gameState.board.map((cell, index) => ({
+            id: index,
+            value: cell === "X" || cell === "O" ? cell : null,
+          }));
+          setBoard(updatedBoard);
+        }
+
+        if (gameState.currentTurn !== undefined) {
+          setCurrentTurn(gameState.currentTurn);
+        }
+
+        setWinningCombination(gameState.winningCombination || []);
+        setMyTurn(gameState.myTurn);
+        setGameStatus(gameState.status);
+
+        setRematchStatus("idle");
+        setShowWinMessage(false);
+      });
+
+      subscribeToGameWinUpdate((winData) => {
+        setWinner(winData.winnerUsername);
+        setLoser(winData.loserUsername);
+        setWinningCombination(winData.winningCombination);
+
+        setScores((prev) => ({
+          ...prev,
+          [winData.winnerUsername]: winData.winnerScore,
+          [winData.loserUsername]: winData.loserScore,
+        }));
+
+        setTimeout(() => {
+          setShowWinMessage(true);
+        }, 1800);
+      });
+
+      subscribeToRematchRequest((data) => {
+        setRematchUsername(data.requesterUsername);
+        setRematchStatus("pending");
+        setRematchDeclineMessage(null);
+      });
+
+      subscribeToRematchResponse((data) => {
+        if (data.accepted) {
+          resetBoardState(); 
+        } else {
+          setRematchDeclineMessage("Rematch request declined.");
+          setRematchStatus("idle");
+        }
+      });
     };
 
     connect(token, onConnect);
-  }, [roomId]);
+
+    return () => {
+      disconnect(); 
+    };
+  }, [roomId, currentPlayer?.name, opponentPlayer?.name]);
+
+  const resetBoardState = () => {
+    setBoard(Array.from({ length: 9 }, (_, i) => ({ id: i, value: null })));
+    setCurrentTurn(null);
+    setMyTurn(false);
+    setWinningCombination([]);
+    setWinner(null);
+    setLoser(null);
+    setShowWinMessage(false);
+    setRematchUsername(null);
+    setRematchStatus("idle");
+    setRematchDeclineMessage(null);
+    setGameStatus("");
+  };
 
   const handleCellClick = (cellId) => {
     if (board[cellId].value || !myTurnRef.current) return;
-
-    const payload = {
-      roomId,
-      cellId,
-      playerToken: currentPlayerToken,
-    };
-
-    sendMove(payload);
+    sendMove({ roomId, cellId, playerToken: currentPlayerToken });
   };
 
   const handlePlayAgain = () => {
-    setShowWinMessage(false);
-    setWinner(null);
-    setLoser(null);
-    setRematchDeclineMessage(null);
     setRematchStatus("requested");
     sendRematchRequest({ roomId });
   };
 
-  const handleNewGame = () => {
-    disconnect();
-    navigate("/", { replace: true }); 
-  };
-
   const handleRematchAccept = () => {
+    resetBoardState(); 
     sendRematchResponse({ roomId, accepted: true });
-
-    setWinner(null);
-    setLoser(null);
-    setShowWinMessage(false);
-    setRematchUsername(null);
-    setRematchStatus("idle");
-    setRematchDeclineMessage(null);
-    setBoard(Array.from({ length: 9 }, (_, i) => ({ id: i, value: null })));
-    setWinningCombination([]);
   };
 
   const handleRematchDecline = () => {
     sendRematchResponse({ roomId, accepted: false });
-    setRematchStatus("idle");
-    setRematchUsername(null);
   };
 
-  const isWinner = winner === currentPlayer.name;
-  const shouldShowConfetti = showWinMessage && isWinner;
+  const handleNewGame = () => {
+    disconnect();
+    navigate("/", { replace: true });
+  };
+
+  const isWinnerCurrent = winner === currentPlayer?.name;
+  const showConfetti = showWinMessage && isWinnerCurrent;
 
   return (
     <main>
-      {shouldShowConfetti && (
+      {showConfetti && (
         <Confetti
           width={window.innerWidth}
           height={window.innerHeight}
           numberOfPieces={250}
           gravity={0.3}
           recycle={true}
-          style={{
-            position: "fixed",
-            top: 0,
-            zIndex: 9999,
-            pointerEvents: "none",
-          }}
+          style={{ position: "fixed", top: 0, zIndex: 9999, pointerEvents: "none" }}
         />
       )}
 
@@ -231,9 +217,10 @@ export default function Room() {
             currentTurn={currentTurn}
             scores={scores}
             winningCombination={winningCombination}
-            onCellClick={handleCellClick}
+            showWinMessage={showWinMessage}
             winner={showWinMessage ? winner : null}
             loser={showWinMessage ? loser : null}
+            onCellClick={handleCellClick}
             onPlayAgain={handlePlayAgain}
             onNewGame={handleNewGame}
             rematchRequestFromPlayer={rematchUsername}

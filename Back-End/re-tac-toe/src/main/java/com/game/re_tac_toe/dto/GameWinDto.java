@@ -11,4 +11,6 @@ public class GameWinDto {
     private String winnerUsername;
     private String loserUsername;
     private List<Integer> winningCombination;
+    private int winnerScore;
+    private int loserScore;
 }

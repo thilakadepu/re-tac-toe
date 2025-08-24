@@ -5,7 +5,6 @@ import { AuthContext } from '../../context/AuthContext.jsx';
 import useRegisterAndLogin from '../../hooks/useRegisterAndLogin';
 import { getToken } from '../../services/authToken';
 import { getRandomImageName } from '../../helpers/imageHelper';
-import PlayerCardDisplay from './PlayerCardDisplay.jsx';
 
 export default function PlayerRegistration() {
   const { login } = useContext(AuthContext);

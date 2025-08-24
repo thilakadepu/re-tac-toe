@@ -4,13 +4,8 @@ article {
   border-radius: 0.75rem;
   width: 200px;
   text-align: center;
-  /* color: white; */
   transition: transform 0.2s ease;
 }
-
-/* .registration-container article:hover {
-  transform: translateY(-5px);
-}  */
 
 article img {
   width: 100px;

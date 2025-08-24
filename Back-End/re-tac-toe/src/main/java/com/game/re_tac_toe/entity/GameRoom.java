@@ -57,6 +57,9 @@ public class GameRoom {
     private boolean player1WantsRematch;
     private boolean player2WantsRematch;
 
+    private int player1Score;
+    private int player2Score;
+
     @ElementCollection
     @OrderColumn
     private List<Integer> moveHistory = new ArrayList<>();
