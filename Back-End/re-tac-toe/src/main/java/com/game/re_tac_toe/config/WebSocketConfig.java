@@ -1,6 +1,7 @@
 package com.game.re_tac_toe.config;
 
 import com.game.re_tac_toe.security.AuthChannelInterceptor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -12,6 +13,9 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer{
 
+    @Value("${frontend.url}")
+    private String frontEndUrl;
+
     private final AuthChannelInterceptor authChannelInterceptor;
 
     public WebSocketConfig(AuthChannelInterceptor authChannelInterceptor) {
@@ -21,7 +25,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer{
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("http://localhost:5173")
+                .setAllowedOrigins(frontEndUrl)
                 .withSockJS();
     }
 
