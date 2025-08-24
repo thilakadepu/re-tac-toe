@@ -30,7 +30,7 @@ export default function PlayerCardDisplay({ avatar, player1Name, setIsMatchFound
       }, 1750);
       return () => clearTimeout(timeout);
     }
-  }, [opponent, roomId]);
+  }, [opponent, roomId, navigate, player1Name, avatar]);
 
   useEffect(() => {
     if (!opponent.name) {

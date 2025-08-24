@@ -24,7 +24,10 @@ export default function RegistrationForm({
       <Form className={`transition-wrapper ${isSubmitted ? "show" : "hide"} registration-form`}>
         <AnimatePresence mode="wait">
           {!isSubmitted ? (
-            <EditablePlayerCardSection avatar={avatar} isDuplicateUserName={isDuplicateUserName} />
+            <EditablePlayerCardSection
+              avatar={avatar}
+              isDuplicateUserName={isDuplicateUserName}
+            />
           ) : (
             <PlayerCardDisplay
               avatar={avatar}

@@ -25,24 +25,12 @@ export default function PlayerRegistration() {
     setPlayerName(username);
   });
 
-  if (token && playerName) {
-    return (
-      <main>
-        <PlayerCardDisplay
-          avatar={avatar}
-          player1Name={playerName}
-          setIsMatchFound={setIsMatchFound}
-        />
-      </main>
-    );
-  }
-
   return (
     <main>
       <RegistrationForm
         isDuplicateUserName={isDuplicateUserName}
-        isSubmitted={isSubmitted}
-        player1Name={player1Name}
+        isSubmitted={isSubmitted || (token && playerName)}
+        player1Name={playerName || player1Name}
         onSubmit={handleRegisterAndLogin}
         avatar={avatar}
         setAvatar={setAvatar}
