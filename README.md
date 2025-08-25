@@ -2,6 +2,8 @@
 
 **Re-Tac-Toe** is a full-stack, real-time multiplayer Tic-Tac-Toe game with animated avatars and secure matchmaking. Built using **Spring Boot (Java 21)** for the backend and **React 19 + Vite** on the frontend, it leverages **WebSockets** for real-time play and **JWT** for authentication.
 
+🎮 **Play Now:** [Re-Tac-Toe Live on Netlify](https://re-tac-toe.netlify.app) 
+
 ---
 
 ## 🔧 Tech Stack
