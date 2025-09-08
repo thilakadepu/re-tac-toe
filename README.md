@@ -84,11 +84,6 @@ Front-End/
 
 ### Backend Setup
 
-```bash
-cd Back-End/re-tac-toe
-./mvnw spring-boot:run
-````
-
 Update `application.properties`:
 
 ```properties
@@ -98,6 +93,11 @@ spring.datasource.password=YOUR_DB_PASS
 spring.jpa.hibernate.ddl-auto=update
 jwt.secret=YOUR_SECRET_KEY
 ```
+
+```bash
+cd Back-End/re-tac-toe
+./mvnw spring-boot:run
+````
 
 ---
 
