@@ -8,7 +8,7 @@ export default function useRegisterAndLogin(onLoginSuccess) {
 
   const handleRegisterAndLogin = (values) => {
     const payload = {
-      username: values.name,
+      displayName: values.name,
     };
 
     registerGuest(payload)
@@ -17,7 +17,7 @@ export default function useRegisterAndLogin(onLoginSuccess) {
         saveToken(token);
         setPlayer1Name(values.name);
         setIsSubmitted(true);
-        onLoginSuccess(payload.username, "Player");
+        onLoginSuccess(values.name, "Player");
       })
       .catch((error) => {
         console.error("Registration failed : ", error);

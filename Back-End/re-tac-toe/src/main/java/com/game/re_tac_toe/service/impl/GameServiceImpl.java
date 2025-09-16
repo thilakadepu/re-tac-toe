@@ -49,17 +49,17 @@ public class GameServiceImpl implements GameService {
             log.info("DATABASE: GameRoom created and saved with ID: {}", gameRoom.getId());
 
             RedirectToRoomDto player1 = new RedirectToRoomDto(
-                    currentPlayer.getUser().getUsername(),
+                    currentPlayer.getUser().getDisplayName(),
                     currentPlayer.getAvatarName(),
-                    opponent.getUser().getUsername(),
+                    opponent.getUser().getDisplayName(),
                     opponent.getAvatarName(),
                     gameRoom.getId()
             );
 
             RedirectToRoomDto player2 = new RedirectToRoomDto(
-                    opponent.getUser().getUsername(),
+                    opponent.getUser().getDisplayName(),
                     opponent.getAvatarName(),
-                    currentPlayer.getUser().getUsername(),
+                    currentPlayer.getUser().getDisplayName(),
                     currentPlayer.getAvatarName(),
                     gameRoom.getId()
             );
@@ -67,7 +67,7 @@ public class GameServiceImpl implements GameService {
             simpMessagingTemplate.convertAndSendToUser( currentPlayer.getUser().getUsername(),"/queue/match/found",player1);
             simpMessagingTemplate.convertAndSendToUser(opponent.getUser().getUsername(),"/queue/match/found",player2);
         } else {
-            log.info("No opponent found for {}. They will continue waiting.", currentPlayer.getUser().getUsername());
+            log.info("No opponent found for {}. They will continue waiting.", currentPlayer.getUser().getDisplayName());
         }
     }
 
@@ -160,7 +160,8 @@ public class GameServiceImpl implements GameService {
 
         gameRoomRepository.save(gameRoom);
 
-        log.info("Token chosen: {} choose {}, assigned to {} / {} assigned to {}", chooser.getUser().getUsername(), token, chooser.getUser().getUsername(), token == 'X' ? 'O' : 'X', nonChooser.getUser().getUsername());
+        log.info("Token chosen: {} choose {}, assigned to {} / {} assigned to {}",
+                chooser.getUser().getDisplayName(), token, chooser.getUser().getDisplayName(), token == 'X' ? 'O' : 'X', nonChooser.getUser().getDisplayName());
 
         simpMessagingTemplate.convertAndSendToUser(
                 chooser.getUser().getUsername(),
@@ -230,12 +231,12 @@ public class GameServiceImpl implements GameService {
 
                 if (isPlayer1) {
                     gameRoom.setPlayer1Score(gameRoom.getPlayer1Score() + 1);
-                    winnerUsername = gameRoom.getPlayer1().getUser().getUsername();
-                    loserUsername = gameRoom.getPlayer2().getUser().getUsername();
+                    winnerUsername = gameRoom.getPlayer1().getUser().getDisplayName();
+                    loserUsername = gameRoom.getPlayer2().getUser().getDisplayName();
                 } else {
                     gameRoom.setPlayer2Score(gameRoom.getPlayer2Score() + 1);
-                    winnerUsername = gameRoom.getPlayer2().getUser().getUsername();
-                    loserUsername = gameRoom.getPlayer1().getUser().getUsername();
+                    winnerUsername = gameRoom.getPlayer2().getUser().getDisplayName();
+                    loserUsername = gameRoom.getPlayer1().getUser().getDisplayName();
                 }
 
                 int winnerScore = isPlayer1 ? gameRoom.getPlayer1Score() : gameRoom.getPlayer2Score();
@@ -249,6 +250,7 @@ public class GameServiceImpl implements GameService {
                         loserScore
                 );
 
+                log.info("Game win detected. Winner: {}. Room: {}", winnerUsername, roomId);
 
                 simpMessagingTemplate.convertAndSendToUser(
                         gameRoom.getPlayer1().getUser().getUsername(),
@@ -308,12 +310,14 @@ public class GameServiceImpl implements GameService {
         gameRoomRepository.save(gameRoom);
 
         Player opponent = isPlayer1 ? gameRoom.getPlayer2() : gameRoom.getPlayer1();
-        String requesterName = isPlayer1 ? gameRoom.getPlayer1().getUser().getUsername() : gameRoom.getPlayer2().getUser().getUsername();
+        String requesterUsername = isPlayer1 ? gameRoom.getPlayer1().getUser().getUsername() : gameRoom.getPlayer2().getUser().getUsername();
+
+        log.info("Player {} requested a rematch. Notifying opponent {}.", requesterUsername, opponent.getUser().getDisplayName()); // Use getDisplayName()
 
         simpMessagingTemplate.convertAndSendToUser(
                 opponent.getUser().getUsername(),
                 "/queue/rematch/request",
-                new RematchRequestDto(requesterName, roomId)
+                new RematchRequestDto(requesterUsername, roomId)
         );
     }
 

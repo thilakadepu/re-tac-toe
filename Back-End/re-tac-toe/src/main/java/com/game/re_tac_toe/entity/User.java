@@ -24,7 +24,7 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private String username;
+    private String displayName;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -32,7 +32,12 @@ public class User implements UserDetails {
     }
 
     @Override
+    public String getUsername() {
+        return this.id != null ? this.id.toString() : null;
+    }
+
+    @Override
     public String getPassword() {
-        return null; // No password
+        return null;
     }
 }
