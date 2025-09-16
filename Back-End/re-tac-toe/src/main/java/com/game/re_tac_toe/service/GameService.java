@@ -2,17 +2,19 @@ package com.game.re_tac_toe.service;
 
 import com.game.re_tac_toe.entity.Player;
 
+import java.util.UUID;
+
 public interface GameService {
 
     void findMatch(Player currentPlayer);
 
-    void playerReady(String roomId, String username);
+    void playerReady(String roomId, UUID userId);
 
-    void setPlayerChoice(String roomId, String username, String choice);
+    void setPlayerChoice(String roomId, UUID userId, String choice);
 
-    void makeMove(String roomId, String username, int position);
+    void makeMove(String roomId, UUID userId, int position);
 
-    void requestRematch(String roomId, String username);
+    void requestRematch(String roomId, UUID userId);
 
-    void respondToRematch(String roomId, String username, boolean accept);
+    void respondToRematch(String roomId, UUID userId, boolean accept);
 }

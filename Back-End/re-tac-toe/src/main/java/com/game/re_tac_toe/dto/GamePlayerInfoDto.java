@@ -9,7 +9,7 @@ public class GamePlayerInfoDto {
     private String avatarName;
 
     public GamePlayerInfoDto(Player player) {
-        this.username = player.getUser().getUsername();
+        this.username = player.getUser().getDisplayName();
         this.avatarName = player.getAvatarName();
     }
 }

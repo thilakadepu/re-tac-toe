@@ -5,6 +5,7 @@ import com.game.re_tac_toe.entity.enums.PlayerStatus;
 import com.game.re_tac_toe.entity.User;
 import com.game.re_tac_toe.repository.PlayerRepository;
 import com.game.re_tac_toe.service.AuthenticationService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -13,12 +14,12 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
 @Component
+@Slf4j
 public class AuthChannelInterceptor implements ChannelInterceptor {
 
     private final AuthenticationService authenticationService;
@@ -41,36 +42,36 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
                 String jwt = authorizationHeader.substring(7);
 
                 try {
-                    UserDetails userDetails = authenticationService.validateToken(jwt);
+                    User user = (User) authenticationService.validateToken(jwt);
 
-                    if (userDetails instanceof User) {
-                        User user = (User) userDetails;
-
-                        Player player = playerRepository.findByUser_Username(user.getUsername())
+                    if (user != null) {
+                        Player player = playerRepository.findByUser_Id(user.getId())
                                 .orElseGet(() -> {
                                     return new Player("Pikachu.png", user);
                                 });
 
                         player.setStatus(PlayerStatus.WAITING);
                         playerRepository.save(player);
-                        System.out.println("Player " + user.getUsername() + " is now WAITING.");
+                        log.info("Player {} (ID: {}) is now WAITING.", user.getUsername(), user.getId());
                     }
 
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
+                            user, null, user.getAuthorities());
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     accessor.setUser(authentication);
                 } catch (Exception e) {
-                    System.err.println("!!! Token validation failed: " + e.getMessage());
+                    log.error("!!! Token validation failed: {}", e.getMessage(), e);
                 }
             } else if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
                 if (accessor.getUser() != null) {
+                    User user = (User) ((UsernamePasswordAuthenticationToken) accessor.getUser()).getPrincipal();
                     String username = accessor.getUser().getName();
-                    Optional<Player> playerOpt = playerRepository.findByUser_Username(username);
+                    Optional<Player> playerOpt = playerRepository.findByUser_Id(user.getId());
                     playerOpt.ifPresent(player -> {
                         player.setStatus(PlayerStatus.OFFLINE);
                         playerRepository.save(player);
+                        log.info("Player {} (ID: {}) disconnected.", user.getUsername(), user.getId());
                     });
                 }
             }

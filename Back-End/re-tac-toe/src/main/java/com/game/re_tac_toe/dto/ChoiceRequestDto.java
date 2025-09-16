@@ -7,6 +7,5 @@ import lombok.Data;
 @AllArgsConstructor
 public class ChoiceRequestDto {
     private String roomId;
-    private String username;
     private String choiceToken;
 }

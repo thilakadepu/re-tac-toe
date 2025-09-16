@@ -47,7 +47,18 @@ main {
 
 .player-cards {
   display: flex;
+  flex-direction: row;
   gap: 1.5rem;
   justify-content: center;
   align-items: center;
+}
+
+@media (max-width: 650px) {
+  .player-cards {
+    flex-direction: column;
+  }
+  /* 
+  .registration-form {
+    padding: 2rem 1rem; 
+  } */
 }

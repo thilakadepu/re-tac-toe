@@ -6,7 +6,6 @@ import { useEffect } from "react";
 import { getRandomImageName } from "../../helpers/imageHelper";
 
 export default function RegistrationForm({
-  isDuplicateUserName,
   isSubmitted,
   player1Name,
   onSubmit,
@@ -26,7 +25,6 @@ export default function RegistrationForm({
           {!isSubmitted ? (
             <EditablePlayerCardSection
               avatar={avatar}
-              isDuplicateUserName={isDuplicateUserName}
             />
           ) : (
             <PlayerCardDisplay

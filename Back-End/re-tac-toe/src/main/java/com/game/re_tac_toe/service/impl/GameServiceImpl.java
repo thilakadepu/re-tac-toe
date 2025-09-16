@@ -11,6 +11,7 @@ import com.game.re_tac_toe.repository.PlayerRepository;
 import com.game.re_tac_toe.service.GameService;
 import com.game.re_tac_toe.util.GameLogicUtil;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import java.util.*;
 import static com.game.re_tac_toe.util.GameLogicUtil.checkForWin;
 
 @Service
+@Slf4j
 public class GameServiceImpl implements GameService {
     private final PlayerRepository playerRepository;
     private final GameRoomRepository gameRoomRepository;
@@ -44,20 +46,20 @@ public class GameServiceImpl implements GameService {
 
             GameRoom gameRoom = new GameRoom(currentPlayer, opponent);
             gameRoomRepository.save(gameRoom);
-            System.out.println("DATABASE: GameRoom created and saved with ID: " + gameRoom.getId());
+            log.info("DATABASE: GameRoom created and saved with ID: {}", gameRoom.getId());
 
             RedirectToRoomDto player1 = new RedirectToRoomDto(
-                    currentPlayer.getUser().getUsername(),
+                    currentPlayer.getUser().getDisplayName(),
                     currentPlayer.getAvatarName(),
-                    opponent.getUser().getUsername(),
+                    opponent.getUser().getDisplayName(),
                     opponent.getAvatarName(),
                     gameRoom.getId()
             );
 
             RedirectToRoomDto player2 = new RedirectToRoomDto(
-                    opponent.getUser().getUsername(),
+                    opponent.getUser().getDisplayName(),
                     opponent.getAvatarName(),
-                    currentPlayer.getUser().getUsername(),
+                    currentPlayer.getUser().getDisplayName(),
                     currentPlayer.getAvatarName(),
                     gameRoom.getId()
             );
@@ -65,25 +67,25 @@ public class GameServiceImpl implements GameService {
             simpMessagingTemplate.convertAndSendToUser( currentPlayer.getUser().getUsername(),"/queue/match/found",player1);
             simpMessagingTemplate.convertAndSendToUser(opponent.getUser().getUsername(),"/queue/match/found",player2);
         } else {
-            System.out.println("No opponent found for " + currentPlayer.getUser().getUsername() + ". They will continue waiting.");
+            log.info("No opponent found for {}. They will continue waiting.", currentPlayer.getUser().getDisplayName());
         }
     }
 
     @Override
     @Transactional
-    public void playerReady(String roomId, String username) {
+    public void playerReady(String roomId, UUID userId) {
         GameRoom gameRoom = gameRoomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalStateException("GameRoom not found with id: " + roomId));
 
-        String player1Username = gameRoom.getPlayer1().getUser().getUsername();
-        String player2Username = gameRoom.getPlayer2().getUser().getUsername();
+        UUID player1Id = gameRoom.getPlayer1().getUser().getId();
+        UUID player2Id = gameRoom.getPlayer2().getUser().getId();
 
-        if (!player1Username.equals(username) && !player2Username.equals(username)) {
-            System.err.println("SECURITY VIOLATION: User " + username + " tried to ready up for a game they are not in.");
+        if (!player1Id.equals(userId) && !player2Id.equals(userId)) {
+            log.error("SECURITY VIOLATION: User {} tried to ready up for a game they are not in.", userId);
             return;
         }
 
-        if (player1Username.equals(username)) {
+        if (player1Id.equals(userId)) {
             gameRoom.setPlayer1Ready(true);
         } else {
             gameRoom.setPlayer2Ready(true);
@@ -107,31 +109,31 @@ public class GameServiceImpl implements GameService {
             gameRoomRepository.save(gameRoom);
             playerRepository.saveAll(List.of(gameRoom.getPlayer1(), gameRoom.getPlayer2()));
 
-            simpMessagingTemplate.convertAndSendToUser(player1Username,"/queue/ready/updates",new ReadyUpdateResponseDto("SUCCESS"));
-            simpMessagingTemplate.convertAndSendToUser(player2Username,"/queue/ready/updates",new ReadyUpdateResponseDto("SUCCESS"));
+            simpMessagingTemplate.convertAndSendToUser(gameRoom.getPlayer1().getUser().getUsername(),"/queue/ready/updates",new ReadyUpdateResponseDto("SUCCESS"));
+            simpMessagingTemplate.convertAndSendToUser(gameRoom.getPlayer2().getUser().getUsername(),"/queue/ready/updates",new ReadyUpdateResponseDto("SUCCESS"));
 
-            simpMessagingTemplate.convertAndSendToUser(player1Username, "/queue/choice", new ChoiceRoleResponseDto(isPlayer1Chooser ? ChoiceRole.CHOOSER : ChoiceRole.NON_CHOOSER));
-            simpMessagingTemplate.convertAndSendToUser(player2Username, "/queue/choice", new ChoiceRoleResponseDto(isPlayer1Chooser ? ChoiceRole.NON_CHOOSER : ChoiceRole.CHOOSER));
+            simpMessagingTemplate.convertAndSendToUser(gameRoom.getPlayer1().getUser().getUsername(), "/queue/choice", new ChoiceRoleResponseDto(isPlayer1Chooser ? ChoiceRole.CHOOSER : ChoiceRole.NON_CHOOSER));
+            simpMessagingTemplate.convertAndSendToUser(gameRoom.getPlayer2().getUser().getUsername(), "/queue/choice", new ChoiceRoleResponseDto(isPlayer1Chooser ? ChoiceRole.NON_CHOOSER : ChoiceRole.CHOOSER));
         }
     }
 
     @Override
     @Transactional
-    public void setPlayerChoice(String roomId, String username, String choice) {
+    public void setPlayerChoice(String roomId, UUID userId, String choice) {
         GameRoom gameRoom = gameRoomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalStateException("GameRoom not found with id: " + roomId));
 
-        Player player = playerRepository.findByUser_Username(username)
-                .orElseThrow(() -> new IllegalStateException("Player not found with username: " + username));
+        Player player = playerRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new IllegalStateException("Player not found with user ID: " + userId));
 
-        if (!gameRoom.getChooserPlayer().getUser().getUsername().equals(username)) {
-            System.err.println("SECURITY VIOLATION: Player " + username + " is not authorized to choose the token.");
+        if (!gameRoom.getChooserPlayer().getUser().getId().equals(userId)) {
+            log.info("SECURITY VIOLATION: Player {} is not authorized to choose the token.", userId);
             return;
         }
 
         char token = Character.toUpperCase(choice.trim().charAt(0));
         if (token != 'X' && token != 'O') {
-            System.err.println("Invalid token choice by " + username + ": " + token);
+            log.error("Invalid token choice by {}: {}", userId, token);
             return;
         }
 
@@ -158,9 +160,8 @@ public class GameServiceImpl implements GameService {
 
         gameRoomRepository.save(gameRoom);
 
-        System.out.println("Token chosen: " + username + " chose " + token +
-                ", assigned to " + chooser.getUser().getUsername() + " / " +
-                (token == 'X' ? 'O' : 'X') + " assigned to " + nonChooser.getUser().getUsername());
+        log.info("Token chosen: {} choose {}, assigned to {} / {} assigned to {}",
+                chooser.getUser().getDisplayName(), token, chooser.getUser().getDisplayName(), token == 'X' ? 'O' : 'X', nonChooser.getUser().getDisplayName());
 
         simpMessagingTemplate.convertAndSendToUser(
                 chooser.getUser().getUsername(),
@@ -186,37 +187,37 @@ public class GameServiceImpl implements GameService {
 
     @Override
     @Transactional
-    public void makeMove(String roomId, String username, int position) {
+    public void makeMove(String roomId, UUID userId, int position) {
         GameRoom gameRoom = gameRoomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalStateException("GameRoom not found with id: " + roomId));
 
         if (gameRoom.getStatus() != GameStatus.IN_PROGRESS) {
-            System.err.println("Move attempted in a game that is not in progress.");
+            log.error("Move attempted in a game that is not in progress.");
             return;
         }
 
-        boolean isPlayer1 = gameRoom.getPlayer1().getUser().getUsername().equals(username);
-        boolean isPlayer2 = gameRoom.getPlayer2().getUser().getUsername().equals(username);
+        boolean isPlayer1 = gameRoom.getPlayer1().getUser().getId().equals(userId);
+        boolean isPlayer2 = gameRoom.getPlayer2().getUser().getId().equals(userId);
         if (!isPlayer1 && !isPlayer2) {
-            System.err.println("SECURITY VIOLATION: User " + username + " tried to move in a game they are not in.");
+            log.error("SECURITY VIOLATION: User " + userId + " tried to move in a game they are not in.");
             return;
         }
 
         if ((isPlayer1 && !gameRoom.isPlayer1Turn()) || (isPlayer2 && !gameRoom.isPlayer2Turn())) {
-            System.err.println("Move attempted out of turn by user: " + username);
+            log.error("Move attempted out of turn by user: " + userId);
             return;
         }
 
         if (position < 0 || position > 8 || gameRoom.getBoard().get(position) != '_') {
-            System.err.println("Invalid move to position " + position + " by user: " + username);
+            log.error("Invalid move to position " + position + " by user: " + userId);
             return;
         }
 
         char token = isPlayer1 ? gameRoom.getPlayer1Token().charAt(0) : gameRoom.getPlayer2Token().charAt(0);
         gameRoom.getBoard().set(position, token);
         gameRoom.getMoveHistory().add(position);
-        System.out.println(gameRoom.getBoard());
-        System.out.println(gameRoom.getMoveHistory());
+        log.info(gameRoom.getBoard().toString());
+        log.info(gameRoom.getMoveHistory().toString());
 
         if (checkForWin(gameRoom.getBoard(), token)) {
             gameRoom.setStatus(GameStatus.FINISHED);
@@ -230,12 +231,12 @@ public class GameServiceImpl implements GameService {
 
                 if (isPlayer1) {
                     gameRoom.setPlayer1Score(gameRoom.getPlayer1Score() + 1);
-                    winnerUsername = gameRoom.getPlayer1().getUser().getUsername();
-                    loserUsername = gameRoom.getPlayer2().getUser().getUsername();
+                    winnerUsername = gameRoom.getPlayer1().getUser().getDisplayName();
+                    loserUsername = gameRoom.getPlayer2().getUser().getDisplayName();
                 } else {
                     gameRoom.setPlayer2Score(gameRoom.getPlayer2Score() + 1);
-                    winnerUsername = gameRoom.getPlayer2().getUser().getUsername();
-                    loserUsername = gameRoom.getPlayer1().getUser().getUsername();
+                    winnerUsername = gameRoom.getPlayer2().getUser().getDisplayName();
+                    loserUsername = gameRoom.getPlayer1().getUser().getDisplayName();
                 }
 
                 int winnerScore = isPlayer1 ? gameRoom.getPlayer1Score() : gameRoom.getPlayer2Score();
@@ -249,6 +250,7 @@ public class GameServiceImpl implements GameService {
                         loserScore
                 );
 
+                log.info("Game win detected. Winner: {}. Room: {}", winnerUsername, roomId);
 
                 simpMessagingTemplate.convertAndSendToUser(
                         gameRoom.getPlayer1().getUser().getUsername(),
@@ -269,9 +271,9 @@ public class GameServiceImpl implements GameService {
             if (gameRoom.getMoveHistory().size() == 9) {
                 int oldestMovePosition = gameRoom.getMoveHistory().removeFirst();
                 gameRoom.getBoard().set(oldestMovePosition, '_');
-                System.out.println("Board was full. Clearing oldest move at position: " + oldestMovePosition);
-                System.out.println(gameRoom.getBoard());
-                System.out.println(gameRoom.getMoveHistory());
+                log.info("Board was full. Clearing oldest move at position: {}", oldestMovePosition);
+                log.info(gameRoom.getBoard().toString());
+                log.info(gameRoom.getMoveHistory().toString());
             }
         }
 
@@ -289,16 +291,16 @@ public class GameServiceImpl implements GameService {
 
     @Override
     @Transactional
-    public void requestRematch(String roomId, String username) {
+    public void requestRematch(String roomId, UUID userId) {
         GameRoom gameRoom = gameRoomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalStateException("GameRoom not found with id: " + roomId));
 
         if (gameRoom.getStatus() != GameStatus.FINISHED) {
-            System.err.println("Play again requested for a game not finished.");
+            log.error("Play again requested for a game not finished.");
             return;
         }
 
-        boolean isPlayer1 = gameRoom.getPlayer1().getUser().getUsername().equals(username);
+        boolean isPlayer1 = gameRoom.getPlayer1().getUser().getId().equals(userId);
         if (isPlayer1) {
             gameRoom.setPlayer1WantsRematch(true);
         } else {
@@ -308,21 +310,31 @@ public class GameServiceImpl implements GameService {
         gameRoomRepository.save(gameRoom);
 
         Player opponent = isPlayer1 ? gameRoom.getPlayer2() : gameRoom.getPlayer1();
+        String requesterUsername = isPlayer1 ? gameRoom.getPlayer1().getUser().getUsername() : gameRoom.getPlayer2().getUser().getDisplayName();
+
+        log.info("Player {} requested a rematch. Notifying opponent {}.", requesterUsername, opponent.getUser().getDisplayName());
+
         simpMessagingTemplate.convertAndSendToUser(
                 opponent.getUser().getUsername(),
                 "/queue/rematch/request",
-                new RematchRequestDto(username, roomId)
+                new RematchRequestDto(requesterUsername, roomId)
         );
     }
 
     @Override
     @Transactional
-    public void respondToRematch(String roomId, String username, boolean accept) {
+    public void respondToRematch(String roomId, UUID userId, boolean accept) {
         GameRoom gameRoom = gameRoomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalStateException("GameRoom not found with id: " + roomId));
 
         Player player1 = gameRoom.getPlayer1();
         Player player2 = gameRoom.getPlayer2();
+
+        boolean isPlayer = player1.getUser().getId().equals(userId) || player2.getUser().getId().equals(userId);
+        if(!isPlayer) {
+            log.error("SECURITY VIOLATION: User {} tried to respond to a rematch they are not in.", userId);
+            return;
+        }
 
         if (!accept) {
             simpMessagingTemplate.convertAndSendToUser(

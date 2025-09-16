@@ -80,7 +80,6 @@ export default function Choice({ currentPlayerName, roomId, setBoard, setCurrent
 
     const payload = {
       roomId,
-      username: currentPlayerName,
       choiceToken: choice,
     };
 

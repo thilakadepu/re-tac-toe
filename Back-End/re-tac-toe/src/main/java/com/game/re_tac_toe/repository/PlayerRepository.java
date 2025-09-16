@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface PlayerRepository extends JpaRepository<Player, UUID> {
-    Optional<Player> findByUser_Username(String username);
+    Optional<Player> findByUser_Id(UUID id);
 
     Optional<Player> findFirstByStatusAndIdNot(PlayerStatus playerStatus, UUID id);
 }

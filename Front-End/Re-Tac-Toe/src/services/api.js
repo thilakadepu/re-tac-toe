@@ -13,10 +13,6 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-export function registerUser(payload) {
-  return apiClient.post('/register', payload);
-}
-
-export function loginUser(payload) {
-  return apiClient.post('/login', payload);
+export function registerGuest(payload) {
+  return apiClient.post('/guest/register', payload);
 }
