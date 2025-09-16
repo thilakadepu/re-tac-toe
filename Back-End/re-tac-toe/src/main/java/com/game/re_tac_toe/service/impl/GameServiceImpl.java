@@ -310,9 +310,9 @@ public class GameServiceImpl implements GameService {
         gameRoomRepository.save(gameRoom);
 
         Player opponent = isPlayer1 ? gameRoom.getPlayer2() : gameRoom.getPlayer1();
-        String requesterUsername = isPlayer1 ? gameRoom.getPlayer1().getUser().getUsername() : gameRoom.getPlayer2().getUser().getUsername();
+        String requesterUsername = isPlayer1 ? gameRoom.getPlayer1().getUser().getUsername() : gameRoom.getPlayer2().getUser().getDisplayName();
 
-        log.info("Player {} requested a rematch. Notifying opponent {}.", requesterUsername, opponent.getUser().getDisplayName()); // Use getDisplayName()
+        log.info("Player {} requested a rematch. Notifying opponent {}.", requesterUsername, opponent.getUser().getDisplayName());
 
         simpMessagingTemplate.convertAndSendToUser(
                 opponent.getUser().getUsername(),
