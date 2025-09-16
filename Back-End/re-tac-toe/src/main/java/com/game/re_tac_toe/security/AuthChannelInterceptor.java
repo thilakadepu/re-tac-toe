@@ -5,6 +5,7 @@ import com.game.re_tac_toe.entity.enums.PlayerStatus;
 import com.game.re_tac_toe.entity.User;
 import com.game.re_tac_toe.repository.PlayerRepository;
 import com.game.re_tac_toe.service.AuthenticationService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
+@Slf4j
 public class AuthChannelInterceptor implements ChannelInterceptor {
 
     private final AuthenticationService authenticationService;
@@ -50,7 +52,7 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 
                         player.setStatus(PlayerStatus.WAITING);
                         playerRepository.save(player);
-                        System.out.println("Player " + user.getUsername() + " (ID: " + user.getId() + ") is now WAITING.");
+                        log.info("Player {} (ID: {}) is now WAITING.", user.getUsername(), user.getId());
                     }
 
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -59,7 +61,7 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     accessor.setUser(authentication);
                 } catch (Exception e) {
-                    System.err.println("!!! Token validation failed: " + e.getMessage());
+                    log.error("!!! Token validation failed: {}", e.getMessage(), e);
                 }
             } else if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
                 if (accessor.getUser() != null) {
@@ -69,7 +71,7 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
                     playerOpt.ifPresent(player -> {
                         player.setStatus(PlayerStatus.OFFLINE);
                         playerRepository.save(player);
-                        System.out.println("Player " + user.getUsername() + " (ID: " + user.getId() + ") disconnected.");
+                        log.info("Player {} (ID: {}) disconnected.", user.getUsername(), user.getId());
                     });
                 }
             }

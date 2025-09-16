@@ -8,6 +8,7 @@ import com.game.re_tac_toe.entity.Player;
 import com.game.re_tac_toe.entity.User;
 import com.game.re_tac_toe.repository.PlayerRepository;
 import com.game.re_tac_toe.service.GameService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,6 +18,7 @@ import java.security.Principal;
 import java.util.Optional;
 
 @Controller
+@Slf4j
 public class GameController {
     private final GameService gameService;
     private final PlayerRepository playerRepository;
@@ -37,7 +39,7 @@ public class GameController {
     public void joinGame(@Payload String avatarName, Principal principal) {
         User user = getUserFromPrincipal(principal);
         if (user == null) {
-            System.err.println("Cannot join game without authenticated principal.");
+            log.info("Cannot join game without authenticated principal.");
             return;
         }
 
@@ -48,7 +50,7 @@ public class GameController {
             playerRepository.save(player);
             gameService.findMatch(player);
         } else {
-            System.err.println("CRITICAL: Player not found for user " + user.getId() + " in joinGame.");
+            log.error("CRITICAL: Player not found for user {} in joinGame.", user.getId());
             Player player = new Player(avatarName, user);
             playerRepository.save(player);
             gameService.findMatch(player);
@@ -59,11 +61,11 @@ public class GameController {
     public void playerReady(@Payload String roomId, Principal principal) {
         User user = getUserFromPrincipal(principal);
         if (user == null) {
-            System.err.println("Cannot ready up without authenticated principal.");
+            log.error("Cannot ready up without authenticated principal.");
             return;
         }
 
-        System.out.println("Room :  " + roomId);
+        log.info("Room :  {}", roomId);
         gameService.playerReady(roomId, user.getId());
     }
 
@@ -71,11 +73,11 @@ public class GameController {
     public void playerChoice(@Payload ChoiceRequestDto choiceRequestDto, Principal principal) {
         User user = getUserFromPrincipal(principal);
         if (user == null) {
-            System.err.println("Cannot ready up without authenticated principal.");
+            log.error("Cannot ready up without authenticated principal.");
             return;
         }
 
-        System.out.println("Choice picked : " + choiceRequestDto.getChoiceToken());
+        log.info("Choice picked : {}", choiceRequestDto.getChoiceToken());
         gameService.setPlayerChoice(choiceRequestDto.getRoomId(), user.getId(), choiceRequestDto.getChoiceToken());
     }
 
@@ -83,7 +85,7 @@ public class GameController {
     public void makeMove(@Payload MakeMoveRequestDto request, Principal principal) {
         User user = getUserFromPrincipal(principal);
         if (user == null) {
-            System.err.println("Cannot make move without authenticated principal.");
+            log.error("Cannot make move without authenticated principal.");
             return;
         }
         gameService.makeMove(request.getRoomId(), user.getId(), request.getPosition());
@@ -93,7 +95,7 @@ public class GameController {
     public void sendRematchRequest(@Payload RematchRequestPayload payload, Principal principal) {
         User user = getUserFromPrincipal(principal);
         if (user == null) {
-            System.err.println("Unauthorized play again request.");
+            log.error("Unauthorized play again request.");
             return;
         }
 
@@ -104,11 +106,11 @@ public class GameController {
     public void handleRematchResponse(@Payload RematchResponsePayload payload, Principal principal) {
         User user = getUserFromPrincipal(principal);
         if (user == null) {
-            System.err.println("Unauthorized play again response.");
+            log.error("Unauthorized play again response.");
             return;
         }
 
-        System.out.println(payload.toString());
+        log.info(payload.toString());
         gameService.respondToRematch(payload.getRoomId(), user.getId(), payload.isAccepted());
     }
 }

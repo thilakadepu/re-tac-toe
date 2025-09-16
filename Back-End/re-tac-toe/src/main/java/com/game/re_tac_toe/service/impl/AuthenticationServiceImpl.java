@@ -34,8 +34,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-
-        // The token "subject" is now the User's unique UUID
         String subject = ((User) userDetails).getId().toString();
 
         return Jwts.builder()
