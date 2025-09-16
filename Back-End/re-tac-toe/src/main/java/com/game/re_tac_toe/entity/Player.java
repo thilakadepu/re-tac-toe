@@ -22,8 +22,8 @@ public class Player {
     @Enumerated(EnumType.STRING)
     private PlayerStatus status;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_username", referencedColumnName = "username")
+    @OneToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
     public Player(String avatarName, User user) {

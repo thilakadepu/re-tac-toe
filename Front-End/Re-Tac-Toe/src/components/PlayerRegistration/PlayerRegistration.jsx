@@ -16,7 +16,6 @@ export default function PlayerRegistration() {
   const {
     handleRegisterAndLogin,
     isSubmitted,
-    isDuplicateUserName,
     player1Name
   } = useRegisterAndLogin((username) => {
     login(username, "Player");
@@ -27,7 +26,6 @@ export default function PlayerRegistration() {
   return (
     <main>
       <RegistrationForm
-        isDuplicateUserName={isDuplicateUserName}
         isSubmitted={isSubmitted || (token && playerName)}
         player1Name={playerName || player1Name}
         onSubmit={handleRegisterAndLogin}

@@ -13,7 +13,6 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -41,23 +40,21 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
                 String jwt = authorizationHeader.substring(7);
 
                 try {
-                    UserDetails userDetails = authenticationService.validateToken(jwt);
+                    User user = (User) authenticationService.validateToken(jwt);
 
-                    if (userDetails instanceof User) {
-                        User user = (User) userDetails;
-
-                        Player player = playerRepository.findByUser_Username(user.getUsername())
+                    if (user != null) {
+                        Player player = playerRepository.findByUser_Id(user.getId())
                                 .orElseGet(() -> {
                                     return new Player("Pikachu.png", user);
                                 });
 
                         player.setStatus(PlayerStatus.WAITING);
                         playerRepository.save(player);
-                        System.out.println("Player " + user.getUsername() + " is now WAITING.");
+                        System.out.println("Player " + user.getUsername() + " (ID: " + user.getId() + ") is now WAITING.");
                     }
 
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
+                            user, null, user.getAuthorities());
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     accessor.setUser(authentication);
@@ -66,11 +63,13 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
                 }
             } else if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
                 if (accessor.getUser() != null) {
+                    User user = (User) ((UsernamePasswordAuthenticationToken) accessor.getUser()).getPrincipal();
                     String username = accessor.getUser().getName();
-                    Optional<Player> playerOpt = playerRepository.findByUser_Username(username);
+                    Optional<Player> playerOpt = playerRepository.findByUser_Id(user.getId());
                     playerOpt.ifPresent(player -> {
                         player.setStatus(PlayerStatus.OFFLINE);
                         playerRepository.save(player);
+                        System.out.println("Player " + user.getUsername() + " (ID: " + user.getId() + ") disconnected.");
                     });
                 }
             }

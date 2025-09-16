@@ -5,39 +5,37 @@ import com.game.re_tac_toe.entity.User;
 import com.game.re_tac_toe.mapper.UserMapper;
 import com.game.re_tac_toe.repository.UserRepository;
 import com.game.re_tac_toe.service.UserService;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 
 @Service
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
-    public UserServiceImpl(UserRepository userRepository, @Lazy PasswordEncoder passwordEncoder, UserMapper userMapper) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
     }
 
     @Override
-    public void saveUser(UserDto userDto) {
+    public User saveGuest(UserDto userDto) {
         User user = userMapper.toEntity(userDto);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
-    public boolean isUserPresent(String username) {
-        return userRepository.findByUsername(username).isPresent();
+    @Override
+    public UserDetails loadUserById(UUID id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with ID : " + id));
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found! with " + username));
+        throw new UsernameNotFoundException("Authentication via username is not supported.");
     }
 }
