@@ -34,7 +34,7 @@ public class GameServiceImpl implements GameService {
 
     @Override
     @Transactional
-    public synchronized void findMatch(Player currentPlayer) {
+    public void findMatch(Player currentPlayer) {
         Optional<Player> opponentPlayerOpt = playerRepository.findFirstByStatusAndIdNot(PlayerStatus.WAITING, currentPlayer.getId());
 
         if(opponentPlayerOpt.isPresent()) {
