@@ -19,6 +19,7 @@ export default function GameBoard({
   loser = null,
   onCellClick,
   showWinMessage,
+  forfeitMessage,
   onPlayAgain,
   onNewGame,
   rematchRequestFromPlayer = null,
@@ -49,8 +50,7 @@ export default function GameBoard({
     );
   });
 
-  const showWinnerScreen =
-    showWinMessage && winner && rematchStatus === "idle";
+  const showWinnerScreen = showWinMessage && rematchStatus === "idle";
 
   return (
     <div className="background-wrapper">
@@ -75,8 +75,12 @@ export default function GameBoard({
 
           {showWinnerScreen || rematchDeclineMessage ? (
             <div className="winner-container">
-              {showWinMessage && winner && (
-                <h2 className="winner-title">🎉 {winner} won!</h2>
+              {showWinMessage && (
+                forfeitMessage ? (
+                  <h2 className="winner-title">{forfeitMessage}</h2>
+                ) : (
+                  winner && <h2 className="winner-title">🎉 {winner} won!</h2>
+                )
               )}
               {showWinMessage && loser && (
                 <p className="winner-subtitle">
@@ -89,9 +93,11 @@ export default function GameBoard({
                 </div>
               )}
               <div className="action-buttons">
-                <button className="btn play-again-btn" onClick={onPlayAgain}>
-                  Play Again
-                </button>
+                {!forfeitMessage && (
+                  <button className="btn play-again-btn" onClick={onPlayAgain}>
+                    Play Again
+                  </button>
+                )}
                 <button className="btn new-game-btn" onClick={onNewGame}>
                   New Game
                 </button>

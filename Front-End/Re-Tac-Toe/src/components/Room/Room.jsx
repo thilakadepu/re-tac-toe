@@ -15,6 +15,7 @@ import {
   subscribeToGameWinUpdate,
   subscribeToRematchRequest,
   subscribeToRematchResponse,
+  subscribeToGameForfeit,
 } from "../../services/connection";
 
 import Choice from "../Choice/Choice";
@@ -44,6 +45,7 @@ export default function Room() {
   const [winner, setWinner] = useState(null);
   const [loser, setLoser] = useState(null);
   const [showWinMessage, setShowWinMessage] = useState(false);
+  const [forfeitMessage, setForfeitMessage] = useState(null);
 
   const [rematchUsername, setRematchUsername] = useState(null);
   const [rematchStatus, setRematchStatus] = useState("idle");
@@ -99,6 +101,7 @@ export default function Room() {
 
         setRematchStatus("idle");
         setShowWinMessage(false);
+        setForfeitMessage(null);
       });
 
       subscribeToGameWinUpdate((winData) => {
@@ -115,6 +118,16 @@ export default function Room() {
         setTimeout(() => {
           setShowWinMessage(true);
         }, 1800);
+      });
+
+      subscribeToGameForfeit((forfeitData) => {
+        setWinner(forfeitData.winnerUsername);
+        setScores((prev) => ({
+          ...prev,
+          [forfeitData.winnerUsername]: forfeitData.winnerScore,
+        }));
+        setForfeitMessage(forfeitData.message);
+        setShowWinMessage(true);
       });
 
       subscribeToRematchRequest((data) => {
@@ -148,6 +161,7 @@ export default function Room() {
     setWinner(null);
     setLoser(null);
     setShowWinMessage(false);
+    setForfeitMessage(null);
     setRematchUsername(null);
     setRematchStatus("idle");
     setRematchDeclineMessage(null);
@@ -218,8 +232,9 @@ export default function Room() {
             scores={scores}
             winningCombination={winningCombination}
             showWinMessage={showWinMessage}
-            winner={showWinMessage ? winner : null}
-            loser={showWinMessage ? loser : null}
+            winner={winner}
+            loser={loser}
+            forfeitMessage={forfeitMessage}
             onCellClick={handleCellClick}
             onPlayAgain={handlePlayAgain}
             onNewGame={handleNewGame}

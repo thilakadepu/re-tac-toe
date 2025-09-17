@@ -163,6 +163,18 @@ const subscribeToRematchResponse = (handleSubscribeToRematchResponse) => {
   }
 }
 
+const subscribeToGameForfeit = (handleGameForfeit) => {
+  if (stompClient && stompClient.connected) {
+    stompClient.subscribe('/user/queue/game/forfeit', (message) => {
+      const data = JSON.parse(message.body);
+      console.log("Forfeit update received:", data);
+      handleGameForfeit(data);
+    });
+  } else {
+    console.error("subscribeToGameForfeit: STOMP client not connected.");
+  }
+}
+
 const disconnect = () => {
   if (stompClient) {
     console.log("Disconnected!")
@@ -186,5 +198,6 @@ export {
   sendRematchRequest,
   subscribeToRematchRequest,
   sendRematchResponse,
-  subscribeToRematchResponse
+  subscribeToRematchResponse,
+  subscribeToGameForfeit
 };
