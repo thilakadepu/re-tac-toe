@@ -8,10 +8,10 @@ import com.game.re_tac_toe.entity.Player;
 import com.game.re_tac_toe.entity.User;
 import com.game.re_tac_toe.repository.PlayerRepository;
 import com.game.re_tac_toe.service.GameService;
+import com.game.re_tac_toe.util.SecurityUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
@@ -28,16 +28,9 @@ public class GameController {
         this.playerRepository = playerRepository;
     }
 
-    private User getUserFromPrincipal(Principal principal) {
-        if (principal == null) {
-            return  null;
-        }
-        return (User) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
-    }
-
     @MessageMapping("/game/join")
     public void joinGame(@Payload String avatarName, Principal principal) {
-        User user = getUserFromPrincipal(principal);
+        User user = SecurityUtil.getUserFromPrincipal(principal);
         if (user == null) {
             log.info("Cannot join game without authenticated principal.");
             return;
@@ -59,7 +52,7 @@ public class GameController {
 
     @MessageMapping("/game/ready")
     public void playerReady(@Payload String roomId, Principal principal) {
-        User user = getUserFromPrincipal(principal);
+        User user = SecurityUtil.getUserFromPrincipal(principal);
         if (user == null) {
             log.error("Cannot ready up without authenticated principal.");
             return;
@@ -71,7 +64,7 @@ public class GameController {
 
     @MessageMapping("/game/choice")
     public void playerChoice(@Payload ChoiceRequestDto choiceRequestDto, Principal principal) {
-        User user = getUserFromPrincipal(principal);
+        User user = SecurityUtil.getUserFromPrincipal(principal);
         if (user == null) {
             log.error("Cannot ready up without authenticated principal.");
             return;
@@ -83,7 +76,7 @@ public class GameController {
 
     @MessageMapping("/game/move")
     public void makeMove(@Payload MakeMoveRequestDto request, Principal principal) {
-        User user = getUserFromPrincipal(principal);
+        User user = SecurityUtil.getUserFromPrincipal(principal);
         if (user == null) {
             log.error("Cannot make move without authenticated principal.");
             return;
@@ -93,7 +86,7 @@ public class GameController {
 
     @MessageMapping("/game/rematch/request")
     public void sendRematchRequest(@Payload RematchRequestPayload payload, Principal principal) {
-        User user = getUserFromPrincipal(principal);
+        User user = SecurityUtil.getUserFromPrincipal(principal);
         if (user == null) {
             log.error("Unauthorized play again request.");
             return;
@@ -104,7 +97,7 @@ public class GameController {
 
     @MessageMapping("/game/rematch/respond")
     public void handleRematchResponse(@Payload RematchResponsePayload payload, Principal principal) {
-        User user = getUserFromPrincipal(principal);
+        User user = SecurityUtil.getUserFromPrincipal(principal);
         if (user == null) {
             log.error("Unauthorized play again response.");
             return;

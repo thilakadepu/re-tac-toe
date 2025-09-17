@@ -5,7 +5,10 @@ import com.game.re_tac_toe.entity.enums.PlayerStatus;
 import com.game.re_tac_toe.entity.User;
 import com.game.re_tac_toe.repository.PlayerRepository;
 import com.game.re_tac_toe.service.AuthenticationService;
+import com.game.re_tac_toe.service.GameService;
+import com.game.re_tac_toe.util.SecurityUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -16,6 +19,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import java.security.Principal;
 import java.util.Optional;
 
 @Component
@@ -24,10 +28,12 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 
     private final AuthenticationService authenticationService;
     private final PlayerRepository playerRepository;
+    private final GameService gameService;
 
-    public AuthChannelInterceptor(AuthenticationService authenticationService, PlayerRepository playerRepository) {
+    public AuthChannelInterceptor(AuthenticationService authenticationService, PlayerRepository playerRepository,@Lazy GameService gameService) {
         this.authenticationService = authenticationService;
         this.playerRepository = playerRepository;
+        this.gameService = gameService;
     }
 
     @Override
@@ -73,6 +79,30 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
                         playerRepository.save(player);
                         log.info("Player {} (ID: {}) disconnected.", user.getUsername(), user.getId());
                     });
+                }
+            }
+        } else if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
+            Principal principal = accessor.getUser();
+            if (principal != null) {
+                User user = SecurityUtil.getUserFromPrincipal(principal);
+                if (user == null) {
+                    return message;
+                }
+
+                Optional<Player> playerOpt = playerRepository.findByUser_Id(user.getId());
+
+                if (playerOpt.isPresent()) {
+                    Player player = playerOpt.get();
+
+                    if (player.getStatus() == PlayerStatus.OFFLINE) {
+                        log.debug("Player {} is already OFFLINE. Skipping duplicate disconnect event.", user.getId());
+                        return message;
+                    }
+
+                    gameService.handleDisconnect(principal);
+                    player.setStatus(PlayerStatus.OFFLINE);
+                    playerRepository.save(player);
+                    log.info("Player {} (ID: {}) disconnected and set to OFFLINE.", player.getUser().getDisplayName(), user.getId());
                 }
             }
         }
