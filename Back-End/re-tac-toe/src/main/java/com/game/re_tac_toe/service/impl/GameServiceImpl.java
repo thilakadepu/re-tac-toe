@@ -3,6 +3,7 @@ package com.game.re_tac_toe.service.impl;
 import com.game.re_tac_toe.dto.*;
 import com.game.re_tac_toe.entity.GameRoom;
 import com.game.re_tac_toe.entity.Player;
+import com.game.re_tac_toe.entity.User;
 import com.game.re_tac_toe.entity.enums.ChoiceRole;
 import com.game.re_tac_toe.entity.enums.GameStatus;
 import com.game.re_tac_toe.entity.enums.PlayerStatus;
@@ -10,11 +11,13 @@ import com.game.re_tac_toe.repository.GameRoomRepository;
 import com.game.re_tac_toe.repository.PlayerRepository;
 import com.game.re_tac_toe.service.GameService;
 import com.game.re_tac_toe.util.GameLogicUtil;
+import com.game.re_tac_toe.util.SecurityUtil;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.util.*;
 
 import static com.game.re_tac_toe.util.GameLogicUtil.checkForWin;
@@ -199,17 +202,17 @@ public class GameServiceImpl implements GameService {
         boolean isPlayer1 = gameRoom.getPlayer1().getUser().getId().equals(userId);
         boolean isPlayer2 = gameRoom.getPlayer2().getUser().getId().equals(userId);
         if (!isPlayer1 && !isPlayer2) {
-            log.error("SECURITY VIOLATION: User " + userId + " tried to move in a game they are not in.");
+            log.error("SECURITY VIOLATION: User {} tried to move in a game they are not in.", userId);
             return;
         }
 
         if ((isPlayer1 && !gameRoom.isPlayer1Turn()) || (isPlayer2 && !gameRoom.isPlayer2Turn())) {
-            log.error("Move attempted out of turn by user: " + userId);
+            log.error("Move attempted out of turn by user: {}", userId);
             return;
         }
 
         if (position < 0 || position > 8 || gameRoom.getBoard().get(position) != '_') {
-            log.error("Invalid move to position " + position + " by user: " + userId);
+            log.error("Invalid move to position {} by user: {}", position, userId);
             return;
         }
 
@@ -310,7 +313,7 @@ public class GameServiceImpl implements GameService {
         gameRoomRepository.save(gameRoom);
 
         Player opponent = isPlayer1 ? gameRoom.getPlayer2() : gameRoom.getPlayer1();
-        String requesterUsername = isPlayer1 ? gameRoom.getPlayer1().getUser().getUsername() : gameRoom.getPlayer2().getUser().getDisplayName();
+        String requesterUsername = isPlayer1 ? gameRoom.getPlayer1().getUser().getDisplayName() : gameRoom.getPlayer2().getUser().getDisplayName();
 
         log.info("Player {} requested a rematch. Notifying opponent {}.", requesterUsername, opponent.getUser().getDisplayName());
 
@@ -360,6 +363,59 @@ public class GameServiceImpl implements GameService {
 
         simpMessagingTemplate.convertAndSendToUser(player1.getUser().getUsername(), "/queue/game/update", updateForPlayer1);
         simpMessagingTemplate.convertAndSendToUser(player2.getUser().getUsername(), "/queue/game/update", updateForPlayer2);
+    }
+
+    @Override
+    public void handleDisconnect(Principal principal) {
+        User disconnectedUser = SecurityUtil.getUserFromPrincipal(principal);
+        if(disconnectedUser == null) {
+            return;
+        }
+
+        Optional<Player> disconnectedPlayerOpt = playerRepository.findByUser_Id(disconnectedUser.getId());
+        if (disconnectedPlayerOpt.isEmpty()) {
+            return;
+        }
+        Player disconnectedPlayer = disconnectedPlayerOpt.get();
+
+        Optional<GameRoom> activeGameOpt = gameRoomRepository.findActiveGameByPlayerId(disconnectedPlayer.getId());
+        if(activeGameOpt.isPresent()) {
+            GameRoom gameRoom = activeGameOpt.get();
+            log.info("Player {} disconnected from active game room {}", disconnectedPlayer.getId(), gameRoom.getId());
+
+            Player remainingPlayer = gameRoom.getPlayer1().getId().equals(disconnectedPlayer.getId())
+                    ? gameRoom.getPlayer2()
+                    : gameRoom.getPlayer1();
+
+            if(gameRoom.getPlayer1().getId().equals(remainingPlayer.getId())) {
+                gameRoom.setPlayer1Score(gameRoom.getPlayer1Score() + 1);
+            } else {
+                gameRoom.setPlayer2Score(gameRoom.getPlayer2Score() + 1);
+            }
+
+            gameRoom.setStatus(GameStatus.FINISHED);
+            remainingPlayer.setStatus(PlayerStatus.WAITING);
+            playerRepository.save(remainingPlayer);
+            gameRoomRepository.save(gameRoom);
+
+            GameForfeitDto forfeitInfo = new GameForfeitDto(
+                    "Opponent disconnected. You win!",
+                    remainingPlayer.getUser().getDisplayName(),
+                    gameRoom.getPlayer1().getId().equals(remainingPlayer.getId()) ? gameRoom.getPlayer1Score() : gameRoom.getPlayer2Score(),
+                    gameRoom.getPlayer1().getId().equals(disconnectedPlayer.getId()) ? gameRoom.getPlayer1Score() : gameRoom.getPlayer2Score()
+            );
+
+            simpMessagingTemplate.convertAndSendToUser(
+                    remainingPlayer.getUser().getUsername(),
+                    "/queue/game/forfeit",
+                    forfeitInfo
+            );
+
+            log.info("Sent forfeit notification to remaining player '{}' (ID: {})",
+                    remainingPlayer.getUser().getDisplayName(),
+                    remainingPlayer.getUser().getUsername()
+            );
+        }
     }
 
 }
